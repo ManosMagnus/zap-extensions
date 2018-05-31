@@ -17,8 +17,10 @@
  */
 package org.zaproxy.zap.extension.websocket;
 
+import java.awt.EventQueue;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.Socket;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -83,6 +85,8 @@ import org.zaproxy.zap.extension.websocket.db.TableWebSocket;
 import org.zaproxy.zap.extension.websocket.db.WebSocketStorage;
 import org.zaproxy.zap.extension.websocket.manualsend.ManualWebSocketSendEditorDialog;
 import org.zaproxy.zap.extension.websocket.manualsend.WebSocketPanelSender;
+import org.zaproxy.zap.extension.websocket.treemap.WebSocketMap;
+import org.zaproxy.zap.extension.websocket.treemap.WebSocketMapPanel;
 import org.zaproxy.zap.extension.websocket.ui.ExcludeFromWebSocketsMenuItem;
 import org.zaproxy.zap.extension.websocket.ui.OptionsParamWebSocket;
 import org.zaproxy.zap.extension.websocket.ui.OptionsWebSocketPanel;
@@ -215,7 +219,13 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	 * Script type used to register Websocket sender scripts.
 	 */
 	private ScriptType websocketSenderSciptType;
-
+	
+	/**
+	 * WebSocket tree
+	 */
+	private WebSocketMap websocketTree = null;
+	
+	Model model;
 	public ExtensionWebSocket() {
 		super(NAME);
 		
@@ -336,6 +346,10 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 			// setup Session Properties
 			sessionExcludePanel =  new SessionExcludeFromWebSocket(this, config);
 			getView().getSessionDialog().addParamPanel(new String[]{}, sessionExcludePanel, false);
+			
+			// setup WebSocket Tree Panel
+			websocketTree = WebSocketMap.createTree(model);
+			hookView.addSelectPanel(getWebSocketMapPanel());
 			
 			// setup Breakpoints
 			ExtensionBreak extBreak = (ExtensionBreak) extLoader.getExtension(ExtensionBreak.NAME);
@@ -550,7 +564,13 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 				
 				keepSocketOpen = true;
 				
-				addWebSocketsChannel(httpMessage, inSocket, outSocket, outReader);
+				WebSocketProxy webSocketProxy = addWebSocketsChannel(httpMessage, inSocket, outSocket, outReader);
+				try {
+					EventQueue.invokeAndWait(() -> websocketTree.addNewConnection(webSocketProxy,true));
+				} catch (Exception e) {
+					logger.error(e.getMessage(),e);
+				}
+				
 			} else {
 				logger.error("Unable to retrieve upgraded outgoing channel.");
 			}
@@ -568,7 +588,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	 * @param remoteSocket Current connection channel from ZAP to the server.
 	 * @param remoteReader Current {@link InputStream} of remote connection.
 	 */
-	public void addWebSocketsChannel(HttpMessage handshakeMessage, Socket localSocket, Socket remoteSocket, InputStream remoteReader) {
+	public WebSocketProxy addWebSocketsChannel(HttpMessage handshakeMessage, Socket localSocket, Socket remoteSocket, InputStream remoteReader) {
 		try {			
 			HttpRequestHeader requestHeader = handshakeMessage.getRequestHeader();
 			String targetHost = requestHeader.getHostName();
@@ -636,6 +656,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 			synchronized (wsProxies) {
 				wsProxies.put(wsProxy.getChannelId(), wsProxy);
 			}
+			return  wsProxy;
 		} catch (Exception e) {
 			// defensive measure to catch all possible exceptions
 			// cleanly close resources
@@ -663,7 +684,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 				}
 			}
 			logger.error("Adding WebSockets channel failed due to: '" + e.getClass() + "' " + e.getMessage(), e);
-			return;
+			return null;
 		}
 	}
 
@@ -1047,7 +1068,14 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	public WebSocketStorage getStorage() {
 		return storage;
 	}
-
+	
+	/**
+	 * @return Returns the websocketTree.
+	 */
+	public WebSocketMap getSocketTree() {
+		return websocketTree;
+	}
+	
 	/**
 	 * The {@link HttpSenderListener} responsible to apply the option {@link OptionsParamWebSocket#isRemoveExtensionsHeader()}.
 	 */
@@ -1111,7 +1139,19 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	 * Resends custom WebSocket messages.
 	 */
 	private ManualWebSocketSendEditorDialog resenderDialog;
-
+	
+	/**
+	 * Shows the WebSocket Tree Map
+	 */
+	private WebSocketMapPanel webSocketMapPanel = null;
+	
+	private WebSocketMapPanel getWebSocketMapPanel(){
+		if (webSocketMapPanel == null){
+			webSocketMapPanel = new WebSocketMapPanel(this);
+		}
+		return webSocketMapPanel;
+	}
+	
 	private WebSocketPanel getWebSocketPanel() {
 		if (panel == null) {
 			panel = new WebSocketPanel(storage.getTable(), getBrkManager());
