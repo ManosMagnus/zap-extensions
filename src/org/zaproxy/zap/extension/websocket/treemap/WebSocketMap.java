@@ -17,6 +17,7 @@ import org.zaproxy.zap.extension.websocket.treemap.nodes.WebSocketTreeNode;
 import org.zaproxy.zap.model.StructuralNode;
 import org.zaproxy.zap.model.Target;
 
+
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.EventQueue;
 import java.security.InvalidParameterException;
@@ -34,6 +35,8 @@ public class WebSocketMap extends SortedTreeModel{
     
     private static Map<Integer, WebSocketTreeNode> hrefMap = new HashMap<>();
     
+    private static Map<Integer, WebSocketTreeNode> channelMap = new HashMap<>();
+    
     public WebSocketMap(WebSocketTreeNode root, Model model){
         super(root);
         this.model = model;
@@ -44,6 +47,7 @@ public class WebSocketMap extends SortedTreeModel{
         webSocketMap.setRoot(WebSocketFolderNode.getRootNode(webSocketMap));
         return webSocketMap;
     }
+    
     
     // returns a representation of the host name in the site map
     private String getHostName(URI uri, WebSocketChannelDTO webSocketChannelDTO) throws URIException {
@@ -98,10 +102,15 @@ public class WebSocketMap extends SortedTreeModel{
             String host = getHostName(uri,webSocketProxy.getDTO());
             
             //add
-            parent = findAndAddChild(parent,host,webSocketProxy.getHandshakeReference(),handshakeMessage);
+            parent = findAndAddChild(parent,host,webSocketProxy.getChannelId(),webSocketProxy.getHandshakeReference(),handshakeMessage);
     
             List<String> path = model.getSession().getTreePath(handshakeMessage);
-            insertNodeInto(null,new WebSocketFolderNode(this,WebSocketNodeTypes.HANDSHAKE,"Handshake"));
+            LOGGER.info("[WS-TREEMAP] getTreePath");
+            int j = 0;
+            for(String str : path){
+                LOGGER.info("[WS-TREEMAP] " + j++ + " : " + str);
+            }
+//            insertNodeInto(null,new WebSocketFolderNode(this,WebSocketNodeType.HANDSHAKE,"Handshake"));
             for (int i=0; path != null && i < path.size(); i++) {
                 folder = path.get(i);
                 if (folder != null && !folder.equals("")) {
@@ -114,7 +123,7 @@ public class WebSocketMap extends SortedTreeModel{
                         leaf = findAndAddLeaf(parent, folder, webSocketProxy.getHandshakeReference(), handshakeMessage);
 //                        webSocketProxy.getHandshakeReference().setSiteNode(leaf);
                     } else {
-                        parent = findAndAddChild(parent, folder, webSocketProxy.getHandshakeReference(), handshakeMessage);
+                        parent = findAndAddChild(parent, folder,webSocketProxy.getChannelId(), webSocketProxy.getHandshakeReference(), handshakeMessage);
                     }
                 }
             }
@@ -128,7 +137,10 @@ public class WebSocketMap extends SortedTreeModel{
         } catch (URIException e) {
             e.printStackTrace();
         }
-        return parent;
+        if (! newOnly || isNew) {
+            return leaf;
+        }
+        return null;
     }
     
     private WebSocketTreeNode findAndAddLeaf(WebSocketTreeNode parent, String nodeName, HistoryReference ref, HttpMessage msg) {
@@ -138,12 +150,12 @@ public class WebSocketMap extends SortedTreeModel{
         String leafName = getLeafName(nodeName, msg);
         WebSocketTreeNode node = findChild(parent, leafName);
         if (node == null) {
-            if(!ref.getCustomIcons().isEmpty()){
-                node = new WebSocketHandshakeNode(this, WebSocketNodeTypes.HANDSHAKE, leafName);
-                node.setCustomIcons(ref.getCustomIcons(), ref.getClearIfManual());
-            } else {
-                node = new WebSocketHandshakeNode(this, WebSocketNodeTypes.HANDSHAKE, leafName);
-            }
+//            if(!ref.getCustomIcons().isEmpty()){
+//                node = new WebSocketHandshakeNode(this, WebSocketNodeType.HANDSHAKE, leafName);
+//                node.setCustomIcons(ref.getCustomIcons(), ref.getClearIfManual());
+//            } else {
+            node = new WebSocketHandshakeNode(this, WebSocketNodeType.HANDSHAKE, leafName);
+//            }
 //            node.setHistoryReference(ref);
             
             hrefMap.put(ref.getHistoryId(), node);
@@ -271,14 +283,15 @@ public class WebSocketMap extends SortedTreeModel{
     }
     
     
-    private WebSocketTreeNode findAndAddChild(WebSocketTreeNode parent, String nodeName, HistoryReference hRef, HttpMessage baseMsg){
+    private WebSocketTreeNode findAndAddChild(WebSocketTreeNode parent, String nodeName,Integer channelID, HistoryReference hRef, HttpMessage baseMsg){
         LOGGER.info("[WS-TREEMAP] findAndAddChild: " + parent.getNodeName()  + " / " + nodeName );
         WebSocketTreeNode result = findChild(parent,nodeName);
         
         //There is no children. Than means was a new WebSocket Connection
-        WebSocketTreeNode newNode = null;
+        WebSocketTreeNode channelNode = null;
         if(result == null){
-            newNode = new WebSocketHandshakeNode(this,WebSocketNodeTypes.HANDSHAKE,nodeName);
+            LOGGER.info("[WS-TREEMAP] I can't find any children");
+            
             int pos = parent.getChildCount();
             for(int i = 0; i < parent.getChildCount(); i++){
                 if(((WebSocketTreeNode)parent.getChildAt(i)).isParentOf(nodeName)){
@@ -286,7 +299,33 @@ public class WebSocketMap extends SortedTreeModel{
                     break;
                 }
             }
-            result = newNode;
+            if(parent.isRoot()){
+                channelNode = new WebSocketFolderNode(this, WebSocketNodeType.CHANNEL_NODE,nodeName);
+                insertNodeInto(channelNode,parent);
+                channelMap.put(channelID, channelNode);
+    
+    
+                WebSocketFolderNode handshakeFolderNode = new WebSocketFolderNode(this, WebSocketNodeType.FOLDER_HANDSHAKE,"Handshakes");
+                insertNodeInto(handshakeFolderNode,channelNode);
+    
+                
+                WebSocketHandshakeNode handshakeNode = new WebSocketHandshakeNode(this, WebSocketNodeType.HANDSHAKE,nodeName);
+                insertNodeInto(handshakeNode,handshakeFolderNode);
+                handleEvent(handshakeFolderNode, handshakeNode, EventType.ADD);
+    
+                result = handshakeNode;
+    
+            }else{
+                WebSocketHandshakeNode handshakeNode = new WebSocketHandshakeNode(this,WebSocketNodeType.HANDSHAKE,nodeName);
+                insertNodeInto(handshakeNode,parent,pos);
+                handleEvent(parent, handshakeNode, EventType.ADD);
+                return handshakeNode;
+            }
+            //
+//            WebSocketHandshakeNode webSocketHandshakeNode = new WebSocketHandshakeNode(this, WebSocketNodeType.FOLDER_HANDSHAKE,nodeName);
+//            insertNodeInto(webSocketHandshakeNode,webSocketHandshakeNode,pos);
+//            handleEvent(parent,webSocketHandshakeNode,EventType.ADD);
+//            result = webSocketHandshakeNode;
         }
         return result;
     }
@@ -296,6 +335,12 @@ public class WebSocketMap extends SortedTreeModel{
         insertNodeInto(child, parent);
     }
     
+    /**
+     * Searching for child with specific node name.
+     * @param parent Node whitch children is going to be searched
+     * @param nodeName The name of the node
+     * @return node if find the requested child. In any other case null
+     */
     private WebSocketTreeNode findChild(WebSocketTreeNode parent, String nodeName){
         LOGGER.info("[WS-TREEMAP] findChild: " + parent.getNodeName() + " / " + nodeName);
         
@@ -308,7 +353,42 @@ public class WebSocketMap extends SortedTreeModel{
         return null;
     }
     
+    /**
+     * Handles the publishing of the add or remove event. Node events are always published.
+     * Site events are only published when the parent of the node is the root of the tree.
+     *
+     * @param parent relevant parent node
+     * @param node the site node the action is being carried out for
+     * @param eventType the type of event occurring (ADD or REMOVE)
+     * @see EventType
+     * @since 2.5.0
+     */
+    private void handleEvent(WebSocketTreeNode parent, WebSocketTreeNode node, EventType eventType) {
+        switch (eventType) {
+            case ADD:
+                publishEvent(SiteMapEventPublisher.SITE_NODE_ADDED_EVENT, node);
+                if (parent == getRoot()) {
+                    publishEvent(SiteMapEventPublisher.SITE_ADDED_EVENT, node);
+                }
+                break;
+            case REMOVE:
+                publishEvent(SiteMapEventPublisher.SITE_NODE_REMOVED_EVENT, node);
+                if(parent == getRoot()) {
+                    publishEvent(SiteMapEventPublisher.SITE_REMOVED_EVENT, node);
+                }
+        }
+    }
     
+    /**
+     * Publish the event being carried out.
+     *
+     * @param event the event that is happening
+     * @param node the node being acted upon
+     * @since 2.5.0
+     */
+    private static void publishEvent(String event, WebSocketTreeNode node) {
+//        ZAP.getEventBus().publishSyncEvent(WebSocketMapEventPublisher.getPublisher(), new Event(SiteMapEventPublisher.getPublisher(), event, new Target(node)));
+    }
     
     private void connectionInitialStructure(){
     
@@ -347,7 +427,7 @@ class SortedTreeModel extends DefaultTreeModel {
         super.insertNodeInto(child, parent, index);
     }
     
-    public void insertNodeInto(WebSocketTreeNode child, WebSocketTreeNode parent, int i) {
+     public void insertNodeInto(WebSocketTreeNode child, WebSocketTreeNode parent, int i) {
         // The index is useless in this model, so just ignore it.
         insertNodeInto(child, parent);
     }

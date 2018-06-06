@@ -348,7 +348,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 			getView().getSessionDialog().addParamPanel(new String[]{}, sessionExcludePanel, false);
 			
 			// setup WebSocket Tree Panel
-			websocketTree = WebSocketMap.createTree(model);
+			websocketTree = WebSocketMap.createTree(getModel());
 			hookView.addSelectPanel(getWebSocketMapPanel());
 			
 			// setup Breakpoints
@@ -566,7 +566,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 				
 				WebSocketProxy webSocketProxy = addWebSocketsChannel(httpMessage, inSocket, outSocket, outReader);
 				try {
-					EventQueue.invokeAndWait(() -> websocketTree.addNewConnection(webSocketProxy,true));
+					EventQueue.invokeAndWait(() -> websocketTree.addNewConnection(webSocketProxy,false));
 				} catch (Exception e) {
 					logger.error(e.getMessage(),e);
 				}
@@ -1147,7 +1147,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	
 	private WebSocketMapPanel getWebSocketMapPanel(){
 		if (webSocketMapPanel == null){
-			webSocketMapPanel = new WebSocketMapPanel(this);
+			webSocketMapPanel = new WebSocketMapPanel(this,websocketTree);
 		}
 		return webSocketMapPanel;
 	}

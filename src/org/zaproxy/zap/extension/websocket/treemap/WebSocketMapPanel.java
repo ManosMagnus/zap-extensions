@@ -9,8 +9,6 @@ import org.zaproxy.zap.extension.websocket.ExtensionWebSocket;
 import org.zaproxy.zap.extension.websocket.WebSocketMessage;
 import org.zaproxy.zap.extension.websocket.WebSocketObserver;
 import org.zaproxy.zap.extension.websocket.WebSocketProxy;
-import org.zaproxy.zap.extension.websocket.treemap.nodes.WebSocketFolderNode;
-import org.zaproxy.zap.extension.websocket.treemap.nodes.WebSocketTreeNode;
 import org.zaproxy.zap.extension.websocket.ui.WebSocketPanel;
 import org.zaproxy.zap.utils.DisplayUtils;
 import org.zaproxy.zap.view.LayoutHelper;
@@ -51,12 +49,15 @@ public class WebSocketMapPanel extends AbstractPanel implements WebSocketObserve
     
     private ExtensionWebSocket extensionWebSocket;
     
+    private WebSocketMap webSocketMap;
+    
     /**
      * Constructor which initialize the Panel
      */
-    public WebSocketMapPanel(ExtensionWebSocket extensionWebSocket){
+    public WebSocketMapPanel(ExtensionWebSocket extensionWebSocket, WebSocketMap webSocketMap){
         super();
         this.extensionWebSocket = extensionWebSocket;
+        this.webSocketMap = webSocketMap;
         initialize();
     }
     
@@ -115,7 +116,7 @@ public class WebSocketMapPanel extends AbstractPanel implements WebSocketObserve
      */
     public JTree getTreeSite() {
         if (websocketTree == null) {
-            websocketTree = new JTree(new DefaultTreeModel(new DefaultMutableTreeNode()));
+            websocketTree = new JTree(webSocketMap);
             websocketTree.setShowsRootHandles(true);
             websocketTree.setName("treeSite");
             websocketTree.setToggleClickCount(1);

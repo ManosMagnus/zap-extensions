@@ -4,30 +4,33 @@ import org.apache.log4j.Logger;
 import org.parosproxy.paros.Constant;
 import org.parosproxy.paros.view.View;
 import org.zaproxy.zap.extension.websocket.treemap.WebSocketMap;
-import org.zaproxy.zap.extension.websocket.treemap.WebSocketNodeTypes;
+import org.zaproxy.zap.extension.websocket.treemap.WebSocketNodeType;
 
 import javax.swing.ImageIcon;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.MutableTreeNode;
 import java.awt.EventQueue;
 import java.util.*;
 
-public class WebSocketTreeNode extends DefaultMutableTreeNode{
+public abstract class WebSocketTreeNode extends DefaultMutableTreeNode{
     
-    private static final long serialVersionUID = 2311091007687312311L;
+    private static final long serialVersionUID = 230091007687312311L;
     
     private String nodeName = null;
     private String hierarchicNodeName = null;
     private boolean dataDriven = false;
+    private WebSocketNodeType type;
     
     private WebSocketMap webSocketMap = null;
     private ArrayList<String> icons = null;
     
     private static Logger LOGGER = Logger.getLogger(WebSocketTreeNode.class);
     
-    public WebSocketTreeNode(WebSocketMap webSocketMap, WebSocketNodeTypes type, String nodeName) {
+    public WebSocketTreeNode(WebSocketMap webSocketMap, WebSocketNodeType type, String nodeName) {
         super();
         this.webSocketMap = webSocketMap;
         this.nodeName = nodeName;
+        this.type = type;
         this.icons = new ArrayList<>();
     }
     
@@ -205,4 +208,24 @@ public class WebSocketTreeNode extends DefaultMutableTreeNode{
         return (WebSocketTreeNode)super.getParent();
     }
     
+    @Override
+    public void setParent(MutableTreeNode newParent) {
+        if (newParent == this) {
+            return;
+        }
+        super.setParent(newParent);
+    }
+    
+    public WebSocketNodeType getType() {
+        return type;
+    }
+    
+    public void setType(WebSocketNodeType type) {
+        this.type = type;
+    }
+    
+    @Override
+    public String toString() {
+        return nodeName;
+    }
 }
