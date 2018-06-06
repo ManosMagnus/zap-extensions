@@ -5,6 +5,7 @@ import org.parosproxy.paros.Constant;
 import org.parosproxy.paros.view.View;
 import org.zaproxy.zap.extension.websocket.treemap.WebSocketMap;
 import org.zaproxy.zap.extension.websocket.treemap.WebSocketNodeType;
+import org.zaproxy.zap.model.StructuralNode;
 
 import javax.swing.ImageIcon;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -12,7 +13,7 @@ import javax.swing.tree.MutableTreeNode;
 import java.awt.EventQueue;
 import java.util.*;
 
-public abstract class WebSocketTreeNode extends DefaultMutableTreeNode{
+public abstract class WebSocketTreeNode extends DefaultMutableTreeNode implements StructuralNode {
     
     private static final long serialVersionUID = 230091007687312311L;
     

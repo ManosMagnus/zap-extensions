@@ -111,8 +111,19 @@ public class WebSocketMap extends SortedTreeModel{
                 LOGGER.info("[WS-TREEMAP] " + j++ + " : " + str);
             }
 //            insertNodeInto(null,new WebSocketFolderNode(this,WebSocketNodeType.HANDSHAKE,"Handshake"));
-            for (int i=0; path != null && i < path.size(); i++) {
-                folder = path.get(i);
+            int i=0;
+            if(((WebSocketTreeNode)parent.getChildAt(0)).getType() == WebSocketNodeType.FOLDER_HANDSHAKE){
+                i = -2;
+            }
+            for (; path != null && i < path.size(); i++) {
+                if(i == -2 ){
+                    folder = "Handshakes";
+                } else if (i == -1){
+                    folder = host;
+                } else {
+                    folder = path.get(i);
+                }
+                
                 if (folder != null && !folder.equals("")) {
                     if (newOnly) {
                         // Check to see if it already exists
