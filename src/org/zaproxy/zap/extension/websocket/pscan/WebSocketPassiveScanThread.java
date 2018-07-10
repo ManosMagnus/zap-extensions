@@ -73,7 +73,7 @@ public class WebSocketPassiveScanThread extends Thread implements WebSocketSende
     public void run() {
         MessageForScanWrap messageWrap;
         WebSocketPassiveScanner currentPassiveScanner;
-        WebSocketMessageDTO currentMessage = null;
+        WebSocketMessageDTO currentMessage;
         while (isPassiveScannerActive){
             if(messagesBuffer.isEmpty()){
                 try {
@@ -89,9 +89,9 @@ public class WebSocketPassiveScanThread extends Thread implements WebSocketSende
                 
                 try {
                     currentMessage = tableWebSocket.getMessage(messageWrap.messageId,messageWrap.channelId);
-                    
-                    while (getIterator().hasNext()){
-                        currentPassiveScanner = getIterator().next();
+                    Iterator<WebSocketPassiveScanner> iterator = getIterator();
+                    while (iterator.hasNext()){
+                        currentPassiveScanner = iterator.next();
                         if(currentPassiveScanner.isEnable() && currentPassiveScanner.isThatMessageForScan(currentMessage)){
                             currentPassiveScanner.setParent(this);
                         }
