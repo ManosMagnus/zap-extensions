@@ -1,55 +1,36 @@
 package org.zaproxy.zap.extension.websocket.pscan;
 
+import org.apache.log4j.Logger;
 import org.parosproxy.paros.db.DatabaseException;
-import org.zaproxy.zap.extension.pscan.PassiveScanner;
 import org.zaproxy.zap.extension.websocket.WebSocketMessage;
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
 import org.zaproxy.zap.extension.websocket.WebSocketProxy;
 import org.zaproxy.zap.extension.websocket.WebSocketSenderListener;
 import org.zaproxy.zap.extension.websocket.db.TableWebSocket;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class WebSocketPassiveScanThread extends Thread implements WebSocketSenderListener {
     
+    private static final Logger LOGGER = Logger.getLogger(WebSocketPassiveScanThread.class);
+    
     public static final int WEBSOCKET_LISTENER_ORDER = 20;
     private LinkedBlockingQueue<MessageForScanWrap> messagesBuffer;
-    private List<WebSocketPassiveScanner> passiveScannerList;
     private volatile boolean  isPassiveScannerActive;
-    private Iterator<WebSocketPassiveScanner> scannerIterator;
-    private boolean isIteratorUpdated = false;
     private TableWebSocket tableWebSocket;
+    WebSocketPassiveScannerManager passiveScannerManager;;
     
-    WebSocketPassiveScanThread(boolean isPassiveScannerActive){
+    public WebSocketPassiveScanThread (WebSocketPassiveScannerManager passiveScannerManager) {
+        this.passiveScannerManager = passiveScannerManager;
+        this.isPassiveScannerActive = true;
         messagesBuffer = new LinkedBlockingQueue<>();
-        this.isPassiveScannerActive = isPassiveScannerActive;
-        tableWebSocket = new TableWebSocket();
     }
     
-    public void addWebSocketPassiveScanner(WebSocketPassiveScanner webSocketPassiveScanner){
-        if(passiveScannerList == null){
-            passiveScannerList = new CopyOnWriteArrayList<>();
-            isIteratorUpdated = false;
-        }
-        passiveScannerList.add(webSocketPassiveScanner);
-    }
     
-    public void removeWebSocketPassiveScanner(WebSocketPassiveScanner webSocketPassiveScanner){
-        if(passiveScannerList != null){
-            passiveScannerList.remove(webSocketPassiveScanner);
-            isIteratorUpdated = false;
-        }
-    }
     
-    public Iterator<WebSocketPassiveScanner> getIterator(){
-        if(isIteratorUpdated == false){
-            scannerIterator = passiveScannerList.iterator();
-        }
-        return scannerIterator;
+    public void setTableWebSocket(TableWebSocket tableWebSocket) {
+        this.tableWebSocket = tableWebSocket;
     }
     
     @Override
@@ -59,9 +40,9 @@ public class WebSocketPassiveScanThread extends Thread implements WebSocketSende
     
     @Override
     public void onMessageFrame(int channelId, WebSocketMessage message, WebSocketProxy.Initiator initiator) {
+        
         //TODO: Take care {@link WebSocketMessage#OPCODE_CONTINUATION}
         messagesBuffer.add(new MessageForScanWrap(message.getMessageId(),channelId,initiator));
-        messagesBuffer.notify();
     }
     
     @Override
@@ -75,32 +56,39 @@ public class WebSocketPassiveScanThread extends Thread implements WebSocketSende
         WebSocketPassiveScanner currentPassiveScanner;
         WebSocketMessageDTO currentMessage;
         while (isPassiveScannerActive){
-            if(messagesBuffer.isEmpty()){
+            if (messagesBuffer.isEmpty() || tableWebSocket == null) {
                 try {
-                    messagesBuffer.wait();
+                    Thread.sleep(10000);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                if(!isPassiveScannerActive){
+                if (!isPassiveScannerActive) {
                     break;
                 }
-                
+            }else{
                 messageWrap = messagesBuffer.poll();
                 
                 try {
-                    currentMessage = tableWebSocket.getMessage(messageWrap.messageId,messageWrap.channelId);
-                    Iterator<WebSocketPassiveScanner> iterator = getIterator();
-                    while (iterator.hasNext()){
+                    currentMessage = tableWebSocket.getMessage(messageWrap.messageId, messageWrap.channelId);
+                    Iterator<WebSocketPassiveScanner> iterator = passiveScannerManager.getIterator();
+                    while (iterator.hasNext()) {
                         currentPassiveScanner = iterator.next();
-                        if(currentPassiveScanner.isEnable() && currentPassiveScanner.isThatMessageForScan(currentMessage)){
+                        LOGGER.info("Current Script: " + currentPassiveScanner.getName());
+                        if (currentPassiveScanner.isEnable() && currentPassiveScanner.applyScanToMessage(currentMessage)) {
                             currentPassiveScanner.setParent(this);
+                            currentPassiveScanner.scanMessage(currentMessage);
                         }
                     }
                 } catch (DatabaseException e) {
                     e.printStackTrace();
                 }
             }
+            
         }
+    }
+    
+    public void shutdown(){
+        isPassiveScannerActive = false;
     }
     
     

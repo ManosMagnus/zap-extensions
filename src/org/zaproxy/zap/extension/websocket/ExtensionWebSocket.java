@@ -81,6 +81,10 @@ import org.zaproxy.zap.extension.websocket.db.TableWebSocket;
 import org.zaproxy.zap.extension.websocket.db.WebSocketStorage;
 import org.zaproxy.zap.extension.websocket.manualsend.ManualWebSocketSendEditorDialog;
 import org.zaproxy.zap.extension.websocket.manualsend.WebSocketPanelSender;
+import org.zaproxy.zap.extension.websocket.pscan.ScriptsWebSocketPassiveScanner;
+import org.zaproxy.zap.extension.websocket.pscan.WebSocketPassiveScanThread;
+import org.zaproxy.zap.extension.websocket.pscan.WebSocketPassiveScannerList;
+import org.zaproxy.zap.extension.websocket.pscan.WebSocketPassiveScannerManager;
 import org.zaproxy.zap.extension.websocket.ui.ExcludeFromWebSocketsMenuItem;
 import org.zaproxy.zap.extension.websocket.ui.OptionsParamWebSocket;
 import org.zaproxy.zap.extension.websocket.ui.OptionsWebSocketPanel;
@@ -217,7 +221,10 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	 * Script type used to register Websocket sender scripts.
 	 */
 	private ScriptType websocketSenderSciptType;
-
+	
+	
+	private WebSocketPassiveScannerManager webSocketPassiveScannerManager = null;
+	
 	public ExtensionWebSocket() {
 		super(NAME);
 		
@@ -229,7 +236,6 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	@Override
 	public void init() {
 		super.init();
-		
 		allChannelObservers = new ArrayList<>();
 		allChannelSenderListeners = new ArrayList<>();
 		wsProxies = new HashMap<>();
@@ -261,6 +267,9 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 				addAllChannelObserver(storage);
 			} else {
 				storage.setTable(table);
+			}
+			if(webSocketPassiveScannerManager != null){
+				webSocketPassiveScannerManager.setTableWebSocket(table);
 			}
 			if (View.isInitialised()) {
 				getWebSocketPanel().setTable(table);
@@ -294,6 +303,17 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	public void hook(ExtensionHook extensionHook) {
 		super.hook(extensionHook);
 		
+		
+		//TODO IAM ADDING THE PASSIVE SCANNER
+		webSocketPassiveScannerManager = new WebSocketPassiveScannerManager();
+		ScriptsWebSocketPassiveScanner webSocketScriptPassiveScanner = new ScriptsWebSocketPassiveScanner();
+		
+		webSocketPassiveScannerManager.startWebSocketPassiveScanThread();
+		addAllChannelSenderListener(webSocketPassiveScannerManager.getWebSocketPassiveScanThread());
+		
+		webSocketPassiveScannerManager.addPassiveScanner(webSocketScriptPassiveScanner);
+		webSocketPassiveScannerManager.setPassiveScanEnabled(true);
+		//TODO STOPTHAT
 		extensionHook.addApiImplementor(api);
 		
 		extensionHook.addPersistentConnectionListener(this);
@@ -398,6 +418,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 			webSocketSenderScriptListener = new WebSocketSenderScriptListener();
 			addAllChannelSenderListener(webSocketSenderScriptListener);
 		}
+		
 	}
 	
 	@Override
