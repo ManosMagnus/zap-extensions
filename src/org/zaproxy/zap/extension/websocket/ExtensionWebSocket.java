@@ -81,6 +81,7 @@ import org.zaproxy.zap.extension.websocket.db.TableWebSocket;
 import org.zaproxy.zap.extension.websocket.db.WebSocketStorage;
 import org.zaproxy.zap.extension.websocket.manualsend.ManualWebSocketSendEditorDialog;
 import org.zaproxy.zap.extension.websocket.manualsend.WebSocketPanelSender;
+import org.zaproxy.zap.extension.websocket.treemap.WebSocketMap;
 import org.zaproxy.zap.extension.websocket.ui.ExcludeFromWebSocketsMenuItem;
 import org.zaproxy.zap.extension.websocket.ui.OptionsParamWebSocket;
 import org.zaproxy.zap.extension.websocket.ui.OptionsWebSocketPanel;
@@ -105,7 +106,7 @@ import org.zaproxy.zap.view.HttpPanelManager.HttpPanelDefaultViewSelectorFactory
 import org.zaproxy.zap.view.HttpPanelManager.HttpPanelViewFactory;
 import org.zaproxy.zap.view.SiteMapListener;
 import org.zaproxy.zap.view.SiteMapTreeCellRenderer;
- 
+
 /**
  * The WebSockets-extension takes over after the HTTP based WebSockets handshake
  * is finished.
@@ -121,7 +122,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	 * The script icon.
 	 * <p>
 	 * Lazily initialised.
-	 * 
+	 *
 	 * @see #getScriptIcon()
 	 */
 	private static ImageIcon scriptIcon;
@@ -398,6 +399,9 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 			webSocketSenderScriptListener = new WebSocketSenderScriptListener();
 			addAllChannelSenderListener(webSocketSenderScriptListener);
 		}
+		
+		WebSocketMap webSocketMap = WebSocketMap.createTree();
+		addAllChannelObserver(webSocketMap.getWebSocketMapListener());
 	}
 	
 	@Override
@@ -481,7 +485,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	 * Gets the icon for scripts types.
 	 * <p>
 	 * Should be called/used only when in view mode.
-	 * 
+	 *
 	 * @return the script icon, never {@code null}.
 	 */
 	private static ImageIcon getScriptIcon() {
