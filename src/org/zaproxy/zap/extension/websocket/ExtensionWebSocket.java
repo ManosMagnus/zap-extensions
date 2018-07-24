@@ -82,6 +82,9 @@ import org.zaproxy.zap.extension.websocket.db.WebSocketStorage;
 import org.zaproxy.zap.extension.websocket.manualsend.ManualWebSocketSendEditorDialog;
 import org.zaproxy.zap.extension.websocket.manualsend.WebSocketPanelSender;
 import org.zaproxy.zap.extension.websocket.treemap.WebSocketMap;
+import org.zaproxy.zap.extension.websocket.treemap.ui.WebSocketMapPanel;
+import org.zaproxy.zap.extension.websocket.treemap.ui.WebSocketMapUI;
+import org.zaproxy.zap.extension.websocket.treemap.ui.WebSocketNodeUI;
 import org.zaproxy.zap.extension.websocket.ui.ExcludeFromWebSocketsMenuItem;
 import org.zaproxy.zap.extension.websocket.ui.OptionsParamWebSocket;
 import org.zaproxy.zap.extension.websocket.ui.OptionsWebSocketPanel;
@@ -218,7 +221,9 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	 * Script type used to register Websocket sender scripts.
 	 */
 	private ScriptType websocketSenderSciptType;
-
+	
+	private WebSocketMap webSocketMap;
+	
 	public ExtensionWebSocket() {
 		super(NAME);
 		
@@ -308,6 +313,9 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 
 		HttpSender.addListener(httpSenderListener);
 		
+		webSocketMap = getWebSocketMap();
+		addAllChannelObserver(webSocketMap.getWebSocketMapListener());
+		
 		try {
 			setChannelIgnoreList(Model.getSingleton().getSession().getExcludeFromProxyRegexs());
 		} catch (WebSocketException e) {
@@ -386,6 +394,10 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 					httpSendEditor.addPersistentConnectionListener(this);
 				}
 			}
+			
+			//WebSocket Map Tree
+			hookView.addSelectPanel(getWebSocketMapPanel());
+			getWebSocketMap().addNodeObserver(getWebSocketMapUI());
 		}
 		// setup sender script interface
 		ExtensionScript extensionScript = Control.getSingleton().getExtensionLoader().getExtension(ExtensionScript.class);
@@ -400,8 +412,6 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 			addAllChannelSenderListener(webSocketSenderScriptListener);
 		}
 		
-		WebSocketMap webSocketMap = WebSocketMap.createTree();
-		addAllChannelObserver(webSocketMap.getWebSocketMapListener());
 	}
 	
 	@Override
@@ -996,7 +1006,14 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 			// Nothing to do.
 		}
 	}
-
+	
+	public WebSocketMap getWebSocketMap() {
+		if(webSocketMap == null){
+			webSocketMap = WebSocketMap.createTree();
+		}
+		return webSocketMap;
+	}
+	
 	/*
 	 * ************************************************************************
 	 * GUI specific code follows here now. It is accessed only by methods hook()
@@ -1035,6 +1052,27 @@ public class ExtensionWebSocket extends ExtensionAdaptor implements
 	 * Resends custom WebSocket messages.
 	 */
 	private ManualWebSocketSendEditorDialog resenderDialog;
+	
+	/**
+	 *
+	 */
+	private WebSocketMapUI webSocketMapUI;
+	
+	private WebSocketMapPanel webSocketMapPanel;
+	
+	public WebSocketMapPanel getWebSocketMapPanel() {
+		if(webSocketMapPanel == null){
+			webSocketMapPanel = new WebSocketMapPanel(this, getWebSocketMapUI());
+		}
+		return webSocketMapPanel;
+	}
+	
+	private WebSocketMapUI getWebSocketMapUI(){
+		if(webSocketMapUI == null){
+			webSocketMapUI = new WebSocketMapUI(new WebSocketNodeUI(getWebSocketMap().getRoot()), getWebSocketMap(),getModel());
+		}
+		return webSocketMapUI;
+	}
 
 	private WebSocketPanel getWebSocketPanel() {
 		if (panel == null) {
