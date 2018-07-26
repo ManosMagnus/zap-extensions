@@ -3,12 +3,17 @@ package org.zaproxy.zap.extension.websocket.treemap;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.httpclient.URIException;
 import org.apache.log4j.Logger;
+import org.parosproxy.paros.Constant;
 import org.parosproxy.paros.db.DatabaseException;
 import org.parosproxy.paros.model.HistoryReference;
 import org.parosproxy.paros.model.Model;
 import org.parosproxy.paros.network.HttpMalformedHeaderException;
 import org.parosproxy.paros.network.HttpMessage;
 import org.zaproxy.zap.extension.websocket.*;
+import org.zaproxy.zap.extension.websocket.treemap.analyzers.LazyJsonAnalyzer;
+import org.zaproxy.zap.extension.websocket.treemap.analyzers.AnalyzeManager;
+import org.zaproxy.zap.extension.websocket.treemap.analyzers.PayloadAnalyzer;
+import org.zaproxy.zap.extension.websocket.treemap.analyzers.structures.PayloadStructure;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.*;
 import org.zaproxy.zap.extension.websocket.utility.InvalidUtf8Exception;
 import org.zaproxy.zap.utils.Pair;
@@ -21,6 +26,13 @@ import java.util.Stack;
 public class WebSocketMap {
     private Logger LOGGER = Logger.getLogger(WebSocketMap.class);
     private WebSocketFolderNode root = null;
+	private AnalyzeManager analyzeManager;
+ 
+	private WebSocketMap(){
+		analyzeManager = new AnalyzeManager();
+		analyzeManager.addAnalyzer(new LazyJsonAnalyzer());
+	}
+	
 	private WebSocketMapListener webSocketMapListener = null;
     
     public static WebSocketMap createTree(){
@@ -77,7 +89,6 @@ public class WebSocketMap {
         WebSocketChannelDTO webSocketChannel = webSocketMessage.channel;
         WebSocketTreeNode hostNode = null;
         try {
-            System.out.println("Host: " + webSocketChannel.host + " Url: " + webSocketChannel.url + " Full Uri: " + getWebSocketHostName(webSocketChannel,webSocketChannel.getHandshakeReference().getHttpMessage()));
             hostNode = root.findChild(getWebSocketHostName(webSocketChannel,webSocketChannel.getHandshakeReference().getHttpMessage()));
         } catch (Exception e) {
 			e.printStackTrace();
@@ -90,8 +101,17 @@ public class WebSocketMap {
                 folderNode = WebSocketFolderNode.newFolderNode(hostNode,WebSocketNodeType.getAppropriateType(webSocketMessage.opcode,true));
             }
 			try {
-				result = new WebSocketMessageNode(WebSocketNodeType.getAppropriateType(webSocketMessage.opcode,false),folderNode,webSocketMessage);
-			} catch (InvalidUtf8Exception e) {
+				PayloadStructure payloadStructure = null;
+				PayloadAnalyzer payloadAnalyzer = getAnalyzerForMessage(webSocketMessage);
+				if(payloadAnalyzer != null ){
+					try{
+						payloadStructure = payloadAnalyzer.getPayloadStructure(webSocketMessage);
+					}catch (Exception e){
+						payloadStructure = null;
+					}
+				}
+				result = new WebSocketMessageNode(WebSocketNodeType.getAppropriateType(webSocketMessage.opcode,false),folderNode,webSocketMessage, getNodeNameFromAnalyzer(payloadAnalyzer, payloadStructure, webSocketMessage));
+			} catch (Exception e) {
 				e.printStackTrace();
 				return null;
 			}
@@ -105,6 +125,32 @@ public class WebSocketMap {
 		}
         return result;
     }
+	
+	static private String getNodeNameFromAnalyzer(PayloadAnalyzer payloadAnalyzer, PayloadStructure payloadStructure, WebSocketMessageDTO messageDTO){
+		String nodeName;
+		if(payloadAnalyzer != null){
+			try {
+				nodeName = payloadAnalyzer.getLeafName(payloadStructure);
+			} catch (Exception e) {
+				try {
+					nodeName = messageDTO.getReadablePayload();
+				} catch (InvalidUtf8Exception e1) {
+					nodeName = Constant.messages.getString("websocket.payload.unreadable_binary");
+				}
+			}
+		}else {
+			try {
+				nodeName = messageDTO.getReadablePayload();
+			} catch (InvalidUtf8Exception e) {
+				nodeName = Constant.messages.getString("websocket.payload.unreadable_binary");
+			}
+		}
+		return nodeName;
+	}
+    
+    private PayloadAnalyzer getAnalyzerForMessage(WebSocketMessageDTO message){
+		return analyzeManager.recognizeMessage(message, null);
+	}
     
     private WebSocketTreeNode getTypeFolder(WebSocketTreeNode hostNode, WebSocketNodeType type){
         return (WebSocketTreeNode) hostNode.getFirstTypeTopDown(type);
@@ -153,7 +199,6 @@ public class WebSocketMap {
         return result;
     }
     
-    //TODO: Maybe I should Add History Reference
     private WebSocketTreeNode createStructureForNewHost(WebSocketTreeNode parent, WebSocketProxy webSocketProxy, HttpMessage handshakeMessage, HistoryReference historyReference) throws URIException {
         
         WebSocketFolderNode hostNode = new WebSocketFolderNode(WebSocketNodeType.FOLDER_HOST, getWebSocketHostName(webSocketProxy.getDTO(),handshakeMessage),parent);
@@ -161,7 +206,8 @@ public class WebSocketMap {
         
         WebSocketFolderNode handshakeFolderNode = WebSocketFolderNode.getHandshakeFolderNode(parent);
         hostNode.addChild(handshakeFolderNode);
-        
+	
+		//TODO: Maybe I should Add History Reference
         WebSocketHandshakeNode webSocketHandshakeNode = new WebSocketHandshakeNode(handshakeFolderNode, getHandshakeHostName( handshakeMessage.getRequestHeader().getURI()), historyReference);
         handshakeFolderNode.addChild(webSocketHandshakeNode);
         
