@@ -33,17 +33,13 @@ public interface StructuralWebSocketNode{
     
     boolean isLeaf();
     
-    boolean equals(StructuralWebSocketNode var1);
-    
     WebSocketNodeType getNodeType();
     
     boolean isDataDriven();
     
-    boolean isSameAs(StructuralWebSocketNode var1);
-    
     int getChildCount();
     
-    void addChild(StructuralWebSocketNode child);
+    boolean addChild(StructuralWebSocketNode child);
     
     boolean addParent(StructuralWebSocketNode parent);
     
@@ -58,4 +54,8 @@ public interface StructuralWebSocketNode{
     StructuralWebSocketNode getFirstTypeTopDown(WebSocketNodeType webSocketNodeType);
     
     StructuralWebSocketNode getFirstTypeBottomUp(WebSocketNodeType webSocketNodeType);
+    
+    void setNodeIndex(int[] nodeIndex);
+    
+    int[] getNodeIndex();
 }

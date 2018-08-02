@@ -47,7 +47,7 @@ public class LazyJsonAnalyzer implements PayloadAnalyzer{
 	
 	@Override
 	public boolean recognizer(WebSocketMessageDTO webSocketMessageDTO) {
-		if(webSocketMessageDTO.opcode != WebSocketMessage.OPCODE_BINARY ){
+		if(webSocketMessageDTO.opcode == WebSocketMessage.OPCODE_TEXT){
 			try {
 				JSON_PARSER.parse(webSocketMessageDTO.getReadablePayload());
 				return true;

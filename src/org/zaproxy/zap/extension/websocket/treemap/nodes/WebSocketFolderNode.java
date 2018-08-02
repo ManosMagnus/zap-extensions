@@ -18,7 +18,9 @@ public class WebSocketFolderNode extends WebSocketTreeNode {
     }
     
     static public WebSocketFolderNode getRootFolderNode(){
-        return new WebSocketFolderNode(WebSocketNodeType.FOLDER_ROOT, Constant.messages.getString("websocket.treemap.close.root"), null);
+        WebSocketFolderNode root = new WebSocketFolderNode(WebSocketNodeType.FOLDER_ROOT, Constant.messages.getString("websocket.treemap.close.root"), null);
+        root.setNodeIndex(new int[]{0});
+        return root;
     }
     
     static public WebSocketFolderNode getHandshakeFolderNode(WebSocketTreeNode parent){

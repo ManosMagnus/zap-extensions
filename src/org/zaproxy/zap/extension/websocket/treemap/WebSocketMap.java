@@ -18,18 +18,25 @@ import org.zaproxy.zap.extension.websocket.treemap.nodes.*;
 import org.zaproxy.zap.extension.websocket.utility.InvalidUtf8Exception;
 import org.zaproxy.zap.utils.Pair;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 
 //TODO: Add JavaDoc
 public class WebSocketMap {
-    private Logger LOGGER = Logger.getLogger(WebSocketMap.class);
+ 
+	private Logger LOGGER = Logger.getLogger(WebSocketMap.class);
+	
     private WebSocketFolderNode root = null;
 	private AnalyzeManager analyzeManager;
+	
+	List<WebSocketNodeObserver> nodeObservers;
  
 	private WebSocketMap(){
 		analyzeManager = new AnalyzeManager();
+		nodeObservers = new ArrayList<>();
 		analyzeManager.addAnalyzer(new LazyJsonAnalyzer());
 	}
 	
@@ -44,6 +51,32 @@ public class WebSocketMap {
     public void setRoot(WebSocketFolderNode root){
         this.root = root;
     }
+    
+    public void addNodeObserver(WebSocketNodeObserver nodeObserver){
+    	nodeObservers.add(nodeObserver);
+	}
+	
+	public void removeNddeObserver(WebSocketNodeObserver nodeObserver){
+    	nodeObservers.remove(nodeObserver);
+	}
+	
+	private void informNodesAdded(List<WebSocketTreeNode> webSocketTreeNodes){
+    	if(!webSocketTreeNodes.isEmpty()){
+			for(WebSocketNodeObserver nodeObserver : nodeObservers){
+				nodeObserver.nodesAdded(webSocketTreeNodes);
+			}
+		}
+	}
+	
+	private void informNodeAdded(WebSocketTreeNode webSocketTreeNode){
+		for(WebSocketNodeObserver nodeObserver : nodeObservers){
+			if(webSocketTreeNode.getNodeIndex() == null) {
+				LOGGER.error("WebSocket Message :" + webSocketTreeNode.getNodeName());
+			}
+			
+			nodeObserver.nodeAdded(webSocketTreeNode);
+		}
+	}
 	
 	//TODO: Add JavaDoc
     public WebSocketFolderNode getRoot(){
@@ -55,6 +88,8 @@ public class WebSocketMap {
 	
 	//TODO: Add JavaDoc
     public synchronized StructuralWebSocketNode addConnection(WebSocketProxy webSocketProxy){
+    
+        List<WebSocketTreeNode> listOfNewNodes = new ArrayList<>();
         
         HttpMessage handshakeMessage;
         try{
@@ -69,18 +104,19 @@ public class WebSocketMap {
         StructuralWebSocketNode result = null;
         try {
             String host = getWebSocketHostName(webSocketProxy.getDTO(), handshakeMessage);
-            parent = findAndAddChild(parent, host, webSocketProxy, handshakeMessage); //If the Host haven't added yet, add them
+            parent = findAndAddChild(parent, host, webSocketProxy, handshakeMessage, listOfNewNodes); //If the Host haven't added yet, add them
             
             List<String> path = Model.getSingleton().getSession().getTreePath(handshakeMessage);
-            result = addPath(parent, path); //If there is a path, add to the tree map Structure
+            result = addPath(parent, path, listOfNewNodes); //If there is a path, add to the tree map Structure
             
         }catch (Exception e){
             LOGGER.error(e.getMessage(),e);
         }
 		
-        if(LOGGER.isDebugEnabled()){
-			LOGGER.debug(toString());
-		}
+//        if(LOGGER.isDebugEnabled()){
+			LOGGER.info (toString());
+//		}
+		informNodesAdded(listOfNewNodes);
         return result;
     }
 	
@@ -99,6 +135,7 @@ public class WebSocketMap {
             WebSocketTreeNode folderNode = getTypeFolder(hostNode,WebSocketNodeType.getAppropriateType(webSocketMessage.opcode,true));
             if(folderNode == null){
                 folderNode = WebSocketFolderNode.newFolderNode(hostNode,WebSocketNodeType.getAppropriateType(webSocketMessage.opcode,true));
+				informNodeAdded(folderNode);
             }
 			try {
 				PayloadStructure payloadStructure = null;
@@ -110,7 +147,13 @@ public class WebSocketMap {
 						payloadStructure = null;
 					}
 				}
-				result = new WebSocketMessageNode(WebSocketNodeType.getAppropriateType(webSocketMessage.opcode,false),folderNode,webSocketMessage, getNodeNameFromAnalyzer(payloadAnalyzer, payloadStructure, webSocketMessage));
+				result = new WebSocketMessageNode(WebSocketNodeType.getAppropriateType(webSocketMessage.opcode,false),null, webSocketMessage, getNodeNameFromAnalyzer(payloadAnalyzer, payloadStructure, webSocketMessage));
+				if( folderNode.findChild(result) == null && result.addParent(folderNode)){
+					if(result.getNodeIndex() == null){
+						LOGGER.warn("This Fucking null");
+					}
+					informNodeAdded(result);
+				}
 			} catch (Exception e) {
 				e.printStackTrace();
 				return null;
@@ -120,9 +163,9 @@ public class WebSocketMap {
             System.out.println("Something Went Wrong");
         }
         
-        if(LOGGER.isDebugEnabled()){
-			LOGGER.debug(toString());
-		}
+//        if(LOGGER.isDebugEnabled()){
+			LOGGER.info(toString());
+//		}
         return result;
     }
 	
@@ -145,6 +188,9 @@ public class WebSocketMap {
 				nodeName = Constant.messages.getString("websocket.payload.unreadable_binary");
 			}
 		}
+		if(nodeName.isEmpty()){
+			nodeName = "<empty>";
+		}
 		return nodeName;
 	}
     
@@ -156,7 +202,7 @@ public class WebSocketMap {
         return (WebSocketTreeNode) hostNode.getFirstTypeTopDown(type);
     }
     
-    private WebSocketTreeNode addPath(WebSocketTreeNode parent, List<String> path){
+    private WebSocketTreeNode addPath(WebSocketTreeNode parent, List<String> path, List<WebSocketTreeNode> listOfNewNodes){
         String folder;
         WebSocketTreeNode result = parent;
         WebSocketTreeNode parentChild;
@@ -169,21 +215,23 @@ public class WebSocketMap {
                     result = parentChild;
                 }else if (i + 1 < path.size()){
                     result  = new WebSocketFolderNode(WebSocketNodeType.FOLDER_HANDSHAKES,folder,result);
+                    listOfNewNodes.add(result);
                 }else {
                     //TODO: Add the HistoryReference
                     result = new WebSocketHandshakeNode(result,folder,null);
+					listOfNewNodes.add(result);
                 }
             }
         }
         return result;
     }
     
-    public WebSocketTreeNode findAndAddChild(WebSocketTreeNode parent, String newNodeName, WebSocketProxy webSocketProxy, HttpMessage httpMessage) throws URIException, DatabaseException, HttpMalformedHeaderException {
+    public WebSocketTreeNode findAndAddChild(WebSocketTreeNode parent, String newNodeName, WebSocketProxy webSocketProxy, HttpMessage httpMessage, List<WebSocketTreeNode> listOfNewNodes) throws URIException, DatabaseException, HttpMalformedHeaderException {
         WebSocketTreeNode parentChild = parent.findChild(newNodeName);
         WebSocketTreeNode result = parentChild;
         
         if(parentChild == null && parent.isRoot()){ //This Handshake establish a new WebSocket connection
-            result = createStructureForNewHost(parent, webSocketProxy, httpMessage, webSocketProxy.getHandshakeReference());
+            result = createStructureForNewHost(parent, webSocketProxy, httpMessage, webSocketProxy.getHandshakeReference(), listOfNewNodes);
         }else if(parentChild.hasSameNodeName(newNodeName)){//Connection have been established (at least once)
             WebSocketTreeNode handshakeFolder = (WebSocketTreeNode) parentChild.getFirstTypeTopDown(WebSocketNodeType.FOLDER_HANDSHAKES);
             WebSocketTreeNode newParent = handshakeFolder.findChild(getHandshakeHostName(webSocketProxy.getHandshakeReference().getHttpMessage().getRequestHeader().getURI()));
@@ -192,6 +240,8 @@ public class WebSocketMap {
             }else{
                 //TODO: Add HistoryReference
                 WebSocketHandshakeNode handshakeNode = new WebSocketHandshakeNode(handshakeFolder,newNodeName,null);
+                listOfNewNodes.add(handshakeNode);
+                
                 handshakeFolder.addChild(handshakeNode);
                 result = handshakeNode;
             }
@@ -199,23 +249,26 @@ public class WebSocketMap {
         return result;
     }
     
-    private WebSocketTreeNode createStructureForNewHost(WebSocketTreeNode parent, WebSocketProxy webSocketProxy, HttpMessage handshakeMessage, HistoryReference historyReference) throws URIException {
+    private WebSocketTreeNode createStructureForNewHost(WebSocketTreeNode parent, WebSocketProxy webSocketProxy, HttpMessage handshakeMessage, HistoryReference historyReference, List<WebSocketTreeNode> listOfNewNodes) throws URIException {
         
         WebSocketFolderNode hostNode = new WebSocketFolderNode(WebSocketNodeType.FOLDER_HOST, getWebSocketHostName(webSocketProxy.getDTO(),handshakeMessage),parent);
-        parent.addChild(hostNode);
+//        parent.addChild(hostNode);
+        listOfNewNodes.add(hostNode);
         
         WebSocketFolderNode handshakeFolderNode = WebSocketFolderNode.getHandshakeFolderNode(parent);
         hostNode.addChild(handshakeFolderNode);
-	
+        listOfNewNodes.add(handshakeFolderNode);
+        
 		//TODO: Maybe I should Add History Reference
         WebSocketHandshakeNode webSocketHandshakeNode = new WebSocketHandshakeNode(handshakeFolderNode, getHandshakeHostName( handshakeMessage.getRequestHeader().getURI()), historyReference);
-        handshakeFolderNode.addChild(webSocketHandshakeNode);
-        
+//        handshakeFolderNode.addChild(webSocketHandshakeNode);
+		listOfNewNodes.add(webSocketHandshakeNode);
+		
         return webSocketHandshakeNode;
         
     }
     
-    private String getWebSocketHostName(WebSocketChannelDTO webSocketChannelDTO, HttpMessage handshakeMessage) throws URIException {
+    private String getWebSocketHostName(WebSocketChannelDTO webSocketChannelDTO, HttpMessage handshakeMessage){
         StringBuilder host = new StringBuilder();
         
         int port = webSocketChannelDTO.port != -1 ? webSocketChannelDTO.port : handshakeMessage.getRequestHeader().getURI().getPort();
@@ -280,7 +333,7 @@ public class WebSocketMap {
                 stringBuilder.append("\t");
             }
             
-            stringBuilder.append("|- " + currentNode.getNodeName() + " (" + currentNode.getNodeType().toString()+ ")" + "\n");
+            stringBuilder.append("|- (" + Arrays.toString(currentNode.getNodeIndex()) + ")" + currentNode.getNodeName() + " (" + currentNode.getNodeType().toString()+ ")" + "\n");
             childrenIterator = currentNode.getChildrenIterator();
             while (childrenIterator.hasNext()){
                 webSocketTreeNodeStack.push(new Pair<>(childrenIterator.next(),currentDepth+1));
