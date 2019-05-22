@@ -57,9 +57,15 @@ public class WebSocketPassiveScannerManager {
     /** Iterator for {@code passiveScannersSet} */
     private Iterator<WebSocketPassiveScanner> iterator;
 
+    /** True if server proxies should be ignored */
+    private boolean isServerModeIgnored = true;
+
     /**
      * Initiate a Passive Scanner Manager. By default passive scans are disabled. In order to enable
-     * all passive scanners {@see WebSocketPassiveScannerManager#setAllPluginPassiveScannersEnabled}
+     * all passive scanners {@see
+     * WebSocketPassiveScannerManager#setAllPluginPassiveScannersEnabled}. In addition if WebSocket
+     * Proxy Mode equals to {@link org.zaproxy.zap.extension.websocket.WebSocketProxy.Mode#SERVER} ,
+     * proxy's messages, by default, are ignored to passive scan .
      */
     public WebSocketPassiveScannerManager(AlertManager alertManager) {
         this.alertManager = alertManager;
@@ -221,5 +227,13 @@ public class WebSocketPassiveScannerManager {
 
     public int getScannerListSize() {
         return getPassiveScannersSet().size();
+    }
+
+    public boolean isServerModeIgnored() {
+        return isServerModeIgnored;
+    }
+
+    public void setServerModeIgnored(boolean serverModeIgnored) {
+        isServerModeIgnored = serverModeIgnored;
     }
 }
