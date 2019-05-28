@@ -22,6 +22,7 @@ package org.zaproxy.zap.extension.websocket.pscan;
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.Logger;
+import org.parosproxy.paros.core.scanner.Alert;
 import org.parosproxy.paros.db.DatabaseException;
 import org.zaproxy.zap.extension.websocket.WebSocketMessage;
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
