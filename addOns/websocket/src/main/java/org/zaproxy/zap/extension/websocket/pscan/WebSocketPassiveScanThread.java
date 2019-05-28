@@ -22,17 +22,20 @@ package org.zaproxy.zap.extension.websocket.pscan;
 import java.util.Iterator;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.log4j.Logger;
+import org.parosproxy.paros.core.scanner.Alert;
 import org.parosproxy.paros.db.DatabaseException;
 import org.zaproxy.zap.extension.websocket.WebSocketMessage;
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
 import org.zaproxy.zap.extension.websocket.WebSocketObserver;
 import org.zaproxy.zap.extension.websocket.WebSocketProxy;
+import org.zaproxy.zap.extension.websocket.alerts.WebSocketAlertThread;
 import org.zaproxy.zap.extension.websocket.alerts.WebSocketAlertWrapper;
 import org.zaproxy.zap.extension.websocket.db.TableWebSocket;
 import org.zaproxy.zap.extension.websocket.db.WebSocketStorage;
 
 /** Implements a background thread for passive scanning */
-public class WebSocketPassiveScanThread extends Thread implements WebSocketObserver {
+public class WebSocketPassiveScanThread extends Thread
+        implements WebSocketObserver, WebSocketAlertThread {
 
     private static final Logger LOGGER = Logger.getLogger(WebSocketPassiveScanThread.class);
 
@@ -132,7 +135,9 @@ public class WebSocketPassiveScanThread extends Thread implements WebSocketObser
                     while (iterator.hasNext()) {
                         currentPassiveScanner = (WebSocketPassiveScannerPlugin) iterator.next();
                         if (currentPassiveScanner.isEnabled()) {
-                            currentPassiveScanner.scanMessage(this, currentMessage);
+                            currentPassiveScanner.scanMessage(
+                                    new WebSocketScanHelper(this, currentPassiveScanner.getId()),
+                                    currentMessage);
                         }
                     }
                 } catch (DatabaseException e) {
@@ -142,12 +147,16 @@ public class WebSocketPassiveScanThread extends Thread implements WebSocketObser
         }
     }
 
+    @Override
+    public Alert.Source getAlertSource() {
+        return Alert.Source.PASSIVE;
+    }
+
+    @Override
     public void raiseAlert(WebSocketAlertWrapper websocketAlert) {
         if (!isPassiveScannerActive) {
             return;
         }
-
-        websocketAlert.setSource(Alert.Source.PASSIVE);
         passiveScannerManager.getAlertManager().alertFound(websocketAlert);
     }
 

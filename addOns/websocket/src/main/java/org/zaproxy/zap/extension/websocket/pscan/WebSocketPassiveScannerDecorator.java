@@ -34,9 +34,8 @@ abstract class WebSocketPassiveScannerDecorator implements WebSocketPassiveScann
     }
 
     @Override
-    public void scanMessage(
-            WebSocketPassiveScanThread thread, WebSocketMessageDTO webSocketMessage) {
-        webSocketPassiveScanner.scanMessage(thread, webSocketMessage);
+    public void scanMessage(WebSocketScanHelper helper, WebSocketMessageDTO webSocketMessage) {
+        webSocketPassiveScanner.scanMessage(helper, webSocketMessage);
     }
 
     @Override

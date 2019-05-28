@@ -22,26 +22,25 @@ package org.zaproxy.zap.extension.websocket.pscan.scripts;
 import javax.script.ScriptException;
 import org.zaproxy.zap.extension.script.ScriptWrapper;
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
-import org.zaproxy.zap.extension.websocket.alerts.WebSocketPassiveScanAlert;
-import org.zaproxy.zap.extension.websocket.pscan.WebSocketPassiveScanThread;
+import org.zaproxy.zap.extension.websocket.pscan.WebSocketPassiveScanner;
+import org.zaproxy.zap.extension.websocket.pscan.WebSocketScanHelper;
 
 /**
  * This interface is going to implemented by Zap Scripts. Interface use by {@link
- * ScriptsWebSocketPassiveScanner#scanMessage(WebSocketPassiveScanThread, WebSocketMessageDTO)} with
- * {@link org.zaproxy.zap.extension.script.ExtensionScript#getInterface(ScriptWrapper, Class)} in
- * order to run scripts with different scripting engines.
+ * WebSocketPassiveScanner#scanMessage(WebSocketScanHelper, WebSocketMessageDTO)} with {@link
+ * org.zaproxy.zap.extension.script.ExtensionScript#getInterface(ScriptWrapper, Class)} in order to
+ * run scripts with different scripting engines.
  */
 public interface WebSocketPassiveScript {
     /**
      * Used for passive scanning the WebSocket Messages.
      *
      * @param helper WebSocketPassiveHelper providing methods to script. Method such as:
-     *     <p>* {@link WebSocketScanHelper#getWebSocketAlertRaiser()} which return a {@link
+     *     <p>* {@link WebSocketScanHelper#getAlertRaiser()} which return a {@link
      *     org.zaproxy.zap.extension.websocket.alerts.WebSocketAlertRaiser} in order to build and
      *     raise alerts.
      * @param msg Message is going to be scanned
      * @throws ScriptException
      */
-    void scan(WebSocketPassiveScanAlert scriptAlerts, WebSocketMessageDTO msg)
-            throws ScriptException;
+    void scan(WebSocketScanHelper helper, WebSocketMessageDTO msg) throws ScriptException;
 }

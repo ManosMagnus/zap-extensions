@@ -3,7 +3,7 @@
  *
  * ZAP is an HTTP/HTTPS proxy for assessing web application security.
  *
- * Copyright 2018 The ZAP Development Team
+ * Copyright 2019 The ZAP Development Team
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.zaproxy.zap.extension.websocket.pscan;
+package org.zaproxy.zap.extension.websocket.alerts;
 
-import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
+import org.zaproxy.zap.extension.alert.ExtensionAlert;
 
-public interface WebSocketPassiveScanner {
+public class AlertManager {
 
-    String getName();
+    private ExtensionAlert extensionAlert;
 
-    void scanMessage(WebSocketScanHelper helper, WebSocketMessageDTO webSocketMessage);
+    public AlertManager(ExtensionAlert extensionAlert) {
+        this.extensionAlert = extensionAlert;
+    }
 
-    int getId();
+    public void alertFound(WebSocketAlertWrapper alertWrapper) {
+        extensionAlert.alertFound(alertWrapper.getAlert(), alertWrapper.getHandshakeReference());
+    }
 }

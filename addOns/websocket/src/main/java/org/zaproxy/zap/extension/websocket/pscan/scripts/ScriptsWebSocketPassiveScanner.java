@@ -27,10 +27,8 @@ import org.zaproxy.zap.extension.script.ScriptType;
 import org.zaproxy.zap.extension.script.ScriptWrapper;
 import org.zaproxy.zap.extension.websocket.ExtensionWebSocket;
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
-import org.zaproxy.zap.extension.websocket.alerts.WebSocketAlertWrapper;
-import org.zaproxy.zap.extension.websocket.alerts.WebSocketPassiveScanAlert;
-import org.zaproxy.zap.extension.websocket.pscan.WebSocketPassiveScanThread;
 import org.zaproxy.zap.extension.websocket.pscan.WebSocketPassiveScanner;
+import org.zaproxy.zap.extension.websocket.pscan.WebSocketScanHelper;
 
 /**
  * Implements Scripting plugin for Passive Scan. The {@link ScriptType} should have been registered
@@ -51,17 +49,11 @@ public class ScriptsWebSocketPassiveScanner implements WebSocketPassiveScanner {
         return extensionScript;
     }
 
-    private WebSocketPassiveScanAlert getScriptAlert(WebSocketPassiveScanThread thread) {
-        return new AlertRaiser(thread);
-    }
-
     @Override
-    public void scanMessage(
-            WebSocketPassiveScanThread thread, WebSocketMessageDTO webSocketMessage) {
+    public void scanMessage(WebSocketScanHelper helper, WebSocketMessageDTO webSocketMessage) {
         if (getExtension() != null) {
             List<ScriptWrapper> scriptWrappers =
                     extensionScript.getScripts(ExtensionWebSocket.SCRIPT_TYPE_WEBSOCKET_PASSIVE);
-            WebSocketPassiveScanAlert alertRaiser = getScriptAlert(thread);
             for (ScriptWrapper scriptWrapper : scriptWrappers) {
                 if (scriptWrapper.isEnabled()) {
                     try {
@@ -70,7 +62,7 @@ public class ScriptsWebSocketPassiveScanner implements WebSocketPassiveScanner {
                                         scriptWrapper, WebSocketPassiveScript.class);
 
                         if (webSocketPassiveScript != null) {
-                            webSocketPassiveScript.scan(alertRaiser, webSocketMessage);
+                            webSocketPassiveScript.scan(helper, webSocketMessage);
                         } else {
                             extensionScript.handleFailedScriptInterface(
                                     scriptWrapper,
@@ -95,41 +87,5 @@ public class ScriptsWebSocketPassiveScanner implements WebSocketPassiveScanner {
     @Override
     public int getId() {
         return PLUGIN_ID;
-    }
-
-    private class AlertRaiser implements WebSocketPassiveScanAlert {
-        private WebSocketPassiveScanThread thread;
-
-        AlertRaiser(WebSocketPassiveScanThread thread) {
-            this.thread = thread;
-        }
-
-        @Override
-        public void raiseAlert(
-                int risk,
-                int confidence,
-                String name,
-                String description,
-                String param,
-                WebSocketMessageDTO webSocketMessage,
-                String solution,
-                String evidence,
-                String reference,
-                int cweIdm,
-                int wascId) {
-            WebSocketAlertWrapper alertWrapper =
-                    new WebSocketAlertWrapper(getId(), risk, confidence, name);
-            alertWrapper.setDetail(
-                    description,
-                    param,
-                    null,
-                    webSocketMessage,
-                    solution,
-                    evidence,
-                    reference,
-                    cweIdm,
-                    wascId);
-            thread.raiseAlert(alertWrapper);
-        }
     }
 }
