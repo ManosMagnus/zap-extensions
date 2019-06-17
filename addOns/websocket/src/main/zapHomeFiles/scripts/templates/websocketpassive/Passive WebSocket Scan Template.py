@@ -4,19 +4,15 @@ Right click the script in the Scripts tree and select "enable"  or "disable"
 """
 
 OPCODE_CONTINUATION = 0x0
-
 OPCODE_TEXT = 0x1
 OPCODE_BINARY = 0x2
-
 OPCODE_CLOSE = 0x8
 OPCODE_PING = 0x9
 OPCODE_PONG = 0xA
-
 RISK_INFO 	= 0
 RISK_LOW 	= 1
 RISK_MEDIUM = 2
 RISK_HIGH 	= 3
-
 CONFIDENCE_LOW = 1
 CONFIDENCE_MEDIUM = 2
 CONFIDENCE_HIGH = 3
@@ -28,16 +24,14 @@ CONFIDENCE_HIGH = 3
  * @param helper - the WebSocketPassiveHelper interface provides the raiseAlert method in order
  *               to raise the appropriate alerts
  * Some useful function(s) about  WebSocketPassiveHelper:
- * helper.getAlertRaiser() -> Returns an WebSocketAlertRaiser instance which is used
+ * helper.newAlert() -> Returns an WebSocketAlertRaiser instance which is used
  *                            for building and raising alerts.
 
  * * Some useful functions about WebSocketAlertRaiser:
  * * alertRaiser.setRiskConfidence(risk, confidence) -> Sets the Risk and the Confidence of the alert. (by default RISK_INFO, CONFIDENCE_MEDIUM).
  * * alertRaiser.setName(name)                       -> Sets the name (by default "").
- * * alertRaisersetDescription(description)          -> Sets a description about potential threat (by default "").
+ * * alertRaiser.setDescription(description)          -> Sets a description about potential threat (by default "").
  * * alertRaiser.setParam(param)                     -> Sets in which parameter the threat noticed (by default "").
- * * alertRaiser.setAttack(attack)                   -> Sets the possible attack (by default "").
- * * alertRaiser.setMessage(msg)                     -> Sets the WebSocketMessageDTO.
  * * alertRaiser.setSolution(solution)               -> Sets a possible solution (by default "").
  * * alertRaiser.setReference(reference)             -> Sets extra references (ex. a web link) (by default "").
  * * alertRaiser.setEvidence(evidence)               -> Sets what's the evidence of the potential thread (by default "").
@@ -69,13 +63,11 @@ def scan(helper,msg):
     print(msg.getReadablePayload())
 
     if(True):
-        alert = helper.getWebSocketAlertRaiser()\
+        alert = helper.newAlert()\
         .setRiskConfidence(RISK_INFO, CONFIDENCE_LOW)\
         .setName("Name of the alert")\
         .setDescription("Description of the Alert.")\
         .setParam("Parameter of the Alert.")\
-        .setAttack("Attack of the Alert.")\
-        .setMessage("Message of the Alert.")\
         .setSolution("Solution of the Alert.")\
         .setReference("Reference of the Alert.")\
         .setEvidence("Evidence of the Alert")\
