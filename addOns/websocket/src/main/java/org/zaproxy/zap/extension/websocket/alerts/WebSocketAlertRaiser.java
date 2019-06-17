@@ -19,6 +19,7 @@
  */
 package org.zaproxy.zap.extension.websocket.alerts;
 
+import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
 import org.zaproxy.zap.extension.websocket.alerts.WebSocketAlertWrapper.WebSocketAlertBuilder;
 import org.zaproxy.zap.extension.websocket.pscan.WebSocketPassiveScanner;
 
@@ -37,13 +38,15 @@ public class WebSocketAlertRaiser extends WebSocketAlertBuilder {
      * @param alertThread the associating {@link WebSocketAlertThread}
      * @param pluginId ID of the plugin. See {@link WebSocketPassiveScanner#getId()}}
      */
-    public WebSocketAlertRaiser(WebSocketAlertThread alertThread, int pluginId) {
+    public WebSocketAlertRaiser(
+            WebSocketAlertThread alertThread, int pluginId, WebSocketMessageDTO webSocketMessage) {
         super(pluginId, alertThread.getAlertSource());
+        super.setMessage(webSocketMessage);
         this.alertThread = alertThread;
     }
 
     /**
-     * Builde and Raise the Alert
+     * Build and Raise the Alert
      *
      * @return the {@link WebSocketAlertWrapper} tha is raised.
      */

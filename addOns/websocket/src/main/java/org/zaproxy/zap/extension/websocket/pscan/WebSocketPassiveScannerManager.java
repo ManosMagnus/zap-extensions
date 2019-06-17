@@ -30,10 +30,10 @@ import org.zaproxy.zap.extension.websocket.db.TableWebSocket;
 /**
  * Manages all stuff related with the WebSocket Passive Scanning. Manager is able to open a
  * background thread {@link WebSocketPassiveScanThread} so as to run passive scans. In addition, all
- * {@link WebSocketPassiveScannerPlugin} implementations should be registered and enabled/disabled
- * by this class. Manager keeps the WebSocket Scanners into thread safe list. Finally, informs every
- * Passive Scanners (should implement {@link WebSocketSenderListener}) about messages with
- * method{@link WebSocketPassiveScannerManager#getWebSocketScannerObserver()}
+ * {@link WebSocketPassiveScanner} implementations should be registered and enabled/disabled by this
+ * class. Manager keeps the WebSocket Scanners into thread safe list. Finally, informs every Passive
+ * Scanners (should implement {@link WebSocketSenderListener}) about messages with method{@link
+ * WebSocketPassiveScannerManager#getWebSocketScannerObserver()}
  */
 public class WebSocketPassiveScannerManager {
 
@@ -50,12 +50,6 @@ public class WebSocketPassiveScannerManager {
 
     /** List stores passive scanners */
     private CopyOnWriteArraySet<WebSocketPassiveScanner> passiveScannersSet;
-
-    /** {@code False} if iterator is out-of-date */
-    private boolean isIteratorUpdated = false;
-
-    /** Iterator for {@code passiveScannersSet} */
-    private Iterator<WebSocketPassiveScanner> iterator;
 
     /** True if server proxies should be ignored */
     private boolean isServerModeIgnored = true;
@@ -133,13 +127,32 @@ public class WebSocketPassiveScannerManager {
     }
 
     /** Adds the WebSocketPassive Scanner if not null */
-    public synchronized WebSocketPassiveScannerPlugin addPassiveScannerPlugin(
+    public synchronized WebSocketPassiveScannerDecorator add(
             WebSocketPassiveScanner passiveScanner) {
+
+        WebSocketPassiveScannerDecorator wsPlugin =
+                new WebSocketPassiveScannerDecorator(passiveScanner);
         if (passiveScanner == null) {
             throw new IllegalArgumentException("Parameter passiveScanner must not be null.");
         }
-        WebSocketPassiveScannerPlugin wsPlugin = new WebSocketPassiveScannerPlugin(passiveScanner);
-        return add(new WebSocketPassiveScannerPlugin(passiveScanner)) ? wsPlugin : null;
+        return addWebSocketPlugin(wsPlugin) ? wsPlugin : null;
+    }
+
+    /**
+     * Add a passive scanner to thread safe list
+     *
+     * @return {@code true} if passive scanner is added to list successfully.
+     * @param passiveScanner the WebSocket Passive scan Plugin
+     */
+    private boolean addWebSocketPlugin(WebSocketPassiveScannerDecorator passiveScanner) {
+        if (getPassiveScannersSet().contains(passiveScanner)) {
+            LOGGER.warn(
+                    "Insertion of "
+                            + passiveScanner.getName()
+                            + " is prevent in order to avoid the duplication");
+            return false;
+        }
+        return getPassiveScannersSet().add(passiveScanner);
     }
 
     /**
@@ -149,10 +162,26 @@ public class WebSocketPassiveScannerManager {
      */
     public void setAllPluginPassiveScannersEnabled(boolean enabled) {
         Iterator<WebSocketPassiveScanner> iterator = getIterator();
-        WebSocketPassiveScannerPlugin scanner;
         while (iterator.hasNext()) {
-            scanner = (WebSocketPassiveScannerPlugin) iterator.next();
-            scanner.setEnabled(enabled);
+            ((WebSocketPassiveScannerDecorator) iterator.next()).setEnabled(enabled);
+        }
+    }
+
+    /**
+     * Enables or disables a WebSocket Passive Scanners
+     *
+     * @param enabled {@code true} if the scanner should be enabled, {@code false} otherwise
+     */
+    public void setPassiveScanEnabled(WebSocketPassiveScanner scanner, boolean enabled) {
+
+        Iterator<WebSocketPassiveScanner> iterator = getIterator();
+        WebSocketPassiveScannerDecorator itScanner;
+        while (iterator.hasNext()) {
+            itScanner = ((WebSocketPassiveScannerDecorator) iterator.next());
+            if (itScanner.equals(scanner)) {
+                itScanner.setEnabled(enabled);
+                return;
+            }
         }
     }
 
@@ -165,7 +194,7 @@ public class WebSocketPassiveScannerManager {
 
     /**
      * Activating or Deactivating the passive scanning. That's not related with any {@link
-     * WebSocketPassiveScannerPlugin} just with background thread {@link WebSocketPassiveScanThread}
+     * WebSocketPassiveScanner} just with background thread {@link WebSocketPassiveScanThread}
      *
      * @param enabled if true activates the background thread
      */
@@ -185,26 +214,6 @@ public class WebSocketPassiveScannerManager {
     }
 
     /**
-     * Add a passive scanner to thread safe list
-     *
-     * @return {@code true} if passive scanner is added to list successfully.
-     */
-    private boolean add(WebSocketPassiveScanner passiveScanner) {
-        if (getPassiveScannersSet().contains(passiveScanner)) {
-            LOGGER.warn(
-                    "Insertion of "
-                            + passiveScanner.getName()
-                            + " is prevent in order to avoid the duplication");
-            return false;
-        }
-        boolean result = getPassiveScannersSet().add(passiveScanner);
-        if (result) {
-            isIteratorUpdated = false;
-        }
-        return result;
-    }
-
-    /**
      * Drop the passive scanner from the list
      *
      * @return {@code true} if passive scanner is dropped from list successfully.
@@ -213,12 +222,16 @@ public class WebSocketPassiveScannerManager {
         return getPassiveScannersSet().remove(passiveScanner);
     }
 
-    /** @return an up-to-date iterator from websocket passive scanner list */
+    /** @return an iterator for all WebSocket Passive Scanners */
     protected Iterator<WebSocketPassiveScanner> getIterator() {
-        if (!isIteratorUpdated) {
-            iterator = getPassiveScannersSet().iterator();
-        }
-        return iterator;
+        return getPassiveScannersSet().iterator();
+    }
+
+    /** @return an iterator for enabled WebSocket Passive Scanners */
+    protected Iterator<WebSocketPassiveScanner> getEnabledIterator() {
+        return getPassiveScannersSet().stream()
+                .filter(x -> ((WebSocketPassiveScannerDecorator) x).isEnabled())
+                .iterator();
     }
 
     public boolean isScannerContained(WebSocketPassiveScanner webSocketPassiveScanner) {

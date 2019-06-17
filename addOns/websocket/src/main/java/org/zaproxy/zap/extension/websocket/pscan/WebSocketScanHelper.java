@@ -21,29 +21,14 @@ package org.zaproxy.zap.extension.websocket.pscan;
 
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
 import org.zaproxy.zap.extension.websocket.alerts.WebSocketAlertRaiser;
-import org.zaproxy.zap.extension.websocket.alerts.WebSocketAlertThread;
 
 /**
- * This class passed into {@link WebSocketPassiveScanner#scanMessage(WebSocketScanHelper,
- * WebSocketMessageDTO)} so as to provide extra functionality at WebSocket Passive scan plugin and
- * script
+ * This interface implemented by {@link WebSocketScanHelper} and is used in {@link
+ * WebSocketPassiveScanner#scanMessage(WebSocketScanHelper, WebSocketMessageDTO)} in order to
+ * provide some useful utilities at WebSocketPlugin.
  */
-public class WebSocketScanHelper {
+public interface WebSocketScanHelper {
 
-    private WebSocketAlertThread webSocketAlertThread;
-    private int pluginId;
-
-    /**
-     * @param webSocketAlertThread the parent thread of helper which is responsible for the alert.
-     * @param pluginId ID of the plugin. See {@link WebSocketPassiveScanner#getId()}}
-     */
-    public WebSocketScanHelper(WebSocketAlertThread webSocketAlertThread, int pluginId) {
-        this.webSocketAlertThread = webSocketAlertThread;
-        this.pluginId = pluginId;
-    }
-
-    /** @return a {@link WebSocketAlertRaiser} in order to Build and raise and alert. */
-    public WebSocketAlertRaiser getAlertRaiser() {
-        return new WebSocketAlertRaiser(webSocketAlertThread, pluginId);
-    }
+    /** Use this method to build and raise an Alert. */
+    WebSocketAlertRaiser newAlert();
 }

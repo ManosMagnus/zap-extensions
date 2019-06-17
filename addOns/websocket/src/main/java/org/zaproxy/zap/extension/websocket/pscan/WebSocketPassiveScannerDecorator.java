@@ -20,9 +20,13 @@
 package org.zaproxy.zap.extension.websocket.pscan;
 
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
+import org.zaproxy.zap.utils.EnableableInterface;
 
-abstract class WebSocketPassiveScannerDecorator implements WebSocketPassiveScanner {
+class WebSocketPassiveScannerDecorator implements WebSocketPassiveScanner, EnableableInterface {
+
     protected final WebSocketPassiveScanner webSocketPassiveScanner;
+
+    private boolean isEnabled = false;
 
     public WebSocketPassiveScannerDecorator(WebSocketPassiveScanner webSocketPassiveScanner) {
         this.webSocketPassiveScanner = webSocketPassiveScanner;
@@ -65,5 +69,15 @@ abstract class WebSocketPassiveScannerDecorator implements WebSocketPassiveScann
             return true;
         }
         return false;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        isEnabled = enabled;
     }
 }

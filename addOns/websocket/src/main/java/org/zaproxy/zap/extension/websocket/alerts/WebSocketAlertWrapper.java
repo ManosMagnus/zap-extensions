@@ -159,7 +159,7 @@ public class WebSocketAlertWrapper {
             return this;
         }
 
-        public WebSocketAlertBuilder setMessage(WebSocketMessageDTO webSocketMessageDTO) {
+        protected WebSocketAlertBuilder setMessage(WebSocketMessageDTO webSocketMessageDTO) {
 
             HttpMessage handshakeMessage;
 
@@ -167,7 +167,11 @@ public class WebSocketAlertWrapper {
                 handshakeMessage =
                         webSocketMessageDTO.channel.getHandshakeReference().getHttpMessage();
             } catch (Exception e) {
-                LOGGER.info("Couldn't get the Handshake Http Message for this specific channel", e);
+                LOGGER.info(
+                        "Couldn't get the Handshake Http Message for this specific channel. "
+                                + "Channel ID:"
+                                + webSocketMessageDTO.channel.id,
+                        e);
                 return null;
             }
 
@@ -212,71 +216,6 @@ public class WebSocketAlertWrapper {
 
         public WebSocketAlertBuilder setRiskConfidence(int risk, int confidence) {
             alert.setRiskConfidence(risk, confidence);
-            return this;
-        }
-
-        /**
-         * Sets the details of the Alert
-         *
-         * @see {@link Alert#setDetail(String, String, String, String, String, String, String,
-         *     String, int, int, HttpMessage)}
-         * @param description the description of the alert
-         * @param param the parameter that has the issue
-         * @param attack the attack triggers the issue
-         * @param webSocketMessageDTO WebSocket message triggers the issue
-         * @param solution solution for the issue
-         * @param evidence evidence (in the WebSocket message) that the issue exists
-         * @param reference references about the issue
-         * @param cweIdm the CWE ID of the issue
-         * @param wascId the WASC ID of the issue
-         */
-        public WebSocketAlertBuilder setDetails(
-                String description,
-                String param,
-                String attack,
-                WebSocketMessageDTO webSocketMessageDTO,
-                String solution,
-                String evidence,
-                String reference,
-                int cweIdm,
-                int wascId) {
-            this.webSocketMessageDTO = webSocketMessageDTO;
-            HttpMessage handshakeMessage;
-            try {
-                handshakeMessage =
-                        webSocketMessageDTO.channel.getHandshakeReference().getHttpMessage();
-            } catch (Exception e) {
-                LOGGER.info("Couldn't get the Handshake Http Message for this specific channel", e);
-                return null;
-            }
-            try {
-                alert.setDetail(
-                        description,
-                        handshakeMessage.getRequestHeader().getURI().toString(),
-                        param,
-                        attack,
-                        OTHER_INFO_LABEL + webSocketMessageDTO.getReadablePayload(),
-                        solution,
-                        reference,
-                        evidence,
-                        cweIdm,
-                        wascId,
-                        handshakeMessage);
-            } catch (InvalidUtf8Exception e) {
-                alert.setDetail(
-                        description,
-                        handshakeMessage.getRequestHeader().getURI().toString(),
-                        param,
-                        attack,
-                        OTHER_INFO_LABEL
-                                + Constant.messages.getString("websocket.payload.invalid_utf8"),
-                        solution,
-                        reference,
-                        evidence,
-                        cweIdm,
-                        wascId,
-                        handshakeMessage);
-            }
             return this;
         }
 
