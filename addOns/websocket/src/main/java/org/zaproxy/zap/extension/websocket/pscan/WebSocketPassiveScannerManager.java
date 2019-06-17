@@ -196,12 +196,12 @@ public class WebSocketPassiveScannerManager {
      * Activating or Deactivating the passive scanning. That's not related with any {@link
      * WebSocketPassiveScanner} just with background thread {@link WebSocketPassiveScanThread}
      *
-     * @param enabled if true activates the background thread
+     * @param activation if true activates the background thread
      */
-    public void setPassiveScanEnabled(boolean enabled) {
-        if (passiveScanEnabled != enabled) {
-            passiveScanEnabled = enabled;
-            if (enabled) {
+    public void setPassiveScanActivation(boolean activation) {
+        if (passiveScanEnabled != activation) {
+            passiveScanEnabled = activation;
+            if (activation) {
                 startWebSocketPassiveScanThread();
             } else {
                 stopWebSocketPassiveScanThread();

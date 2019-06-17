@@ -438,6 +438,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor
 
             webSocketPassiveScannerManager.add(webSocketScriptPassiveScanner);
             webSocketPassiveScannerManager.setAllPluginPassiveScannersEnabled(true);
+            webSocketPassiveScannerManager.setPassiveScanActivation(true);
         }
     }
 
