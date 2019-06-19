@@ -39,11 +39,11 @@ public class WebSocketPassiveScannerManager {
 
     private static final Logger LOGGER = Logger.getLogger(WebSocketPassiveScannerManager.class);
 
-    /** The background thread where the passive scans are happening */
+    /** The background thread where the passive scans are running */
     private WebSocketPassiveScanThread passiveScanThread;
 
     /** {@code false} if passive scans are disabled */
-    private boolean passiveScanEnabled = false;
+    private boolean isThreadActive = false;
 
     /** Used to raise Alert Messages */
     private AlertManager alertManager;
@@ -56,10 +56,10 @@ public class WebSocketPassiveScannerManager {
 
     /**
      * Initiate a Passive Scanner Manager. By default passive scans are disabled. In order to enable
-     * all passive scanners {@see
-     * WebSocketPassiveScannerManager#setAllPluginPassiveScannersEnabled}. In addition if WebSocket
-     * Proxy Mode equals to {@link org.zaproxy.zap.extension.websocket.WebSocketProxy.Mode#SERVER} ,
-     * proxy's messages, by default, are ignored to passive scan .
+     * all passive scanners {@see WebSocketPassiveScannerManager#setAllEnable}. In addition, if
+     * WebSocket Proxy Mode equals to {@link
+     * org.zaproxy.zap.extension.websocket.WebSocketProxy.Mode#SERVER} , proxy's messages, by
+     * default, are ignored to passive scan .
      */
     public WebSocketPassiveScannerManager(AlertManager alertManager) {
         this.alertManager = alertManager;
@@ -87,12 +87,12 @@ public class WebSocketPassiveScannerManager {
     }
 
     /**
-     * Begin and activate the background thread where passive scans runs. Do nothing if the
+     * Begin and activate the background thread where passive scans are running. Do nothing if the
      * background thread have already been running
      */
-    public void startWebSocketPassiveScanThread() {
+    private void startThread() {
         if (!passiveScanThread.isAlive()) {
-            passiveScanThread.setPassiveScannerActive(true);
+            passiveScanThread.setActive(true);
             passiveScanThread.start();
         }
     }
@@ -111,19 +111,19 @@ public class WebSocketPassiveScannerManager {
 
     /**
      * Sets the {@link TableWebSocket} if have not been yet. In order to force manager to update the
-     * table use {@link WebSocketPassiveScannerManager#setTableWebSocket(TableWebSocket)}
+     * table use {@link WebSocketPassiveScannerManager#setTable(TableWebSocket)}
      *
      * @param tableWebSocket the table
      */
-    public void setTableWebSocketIfNot(TableWebSocket tableWebSocket) {
-        if (!getWebSocketPassiveScanThread().hasTableWebSocket()) {
-            passiveScanThread.setTableWebSocket(tableWebSocket);
+    public void setTableIfNot(TableWebSocket tableWebSocket) {
+        if (!getWebSocketPassiveScanThread().hasTable()) {
+            passiveScanThread.setTable(tableWebSocket);
         }
     }
 
     /** Setting the table WebSocket */
-    public void setTableWebSocket(TableWebSocket tableWebSocket) {
-        passiveScanThread.setTableWebSocket(tableWebSocket);
+    private void setTable(TableWebSocket tableWebSocket) {
+        passiveScanThread.setTable(tableWebSocket);
     }
 
     /** Adds the WebSocketPassive Scanner if not null */
@@ -135,7 +135,7 @@ public class WebSocketPassiveScannerManager {
         if (passiveScanner == null) {
             throw new IllegalArgumentException("Parameter passiveScanner must not be null.");
         }
-        return addWebSocketPlugin(wsPlugin) ? wsPlugin : null;
+        return addPlugin(wsPlugin) ? wsPlugin : null;
     }
 
     /**
@@ -144,7 +144,7 @@ public class WebSocketPassiveScannerManager {
      * @return {@code true} if passive scanner is added to list successfully.
      * @param passiveScanner the WebSocket Passive scan Plugin
      */
-    private boolean addWebSocketPlugin(WebSocketPassiveScannerDecorator passiveScanner) {
+    private boolean addPlugin(WebSocketPassiveScannerDecorator passiveScanner) {
         if (getPassiveScannersSet().contains(passiveScanner)) {
             LOGGER.warn(
                     "Insertion of "
@@ -160,7 +160,7 @@ public class WebSocketPassiveScannerManager {
      *
      * @param enabled {@code true} if the scanners should be enabled, {@code false} otherwise
      */
-    public void setAllPluginPassiveScannersEnabled(boolean enabled) {
+    public void setAllEnable(boolean enabled) {
         Iterator<WebSocketPassiveScanner> iterator = getIterator();
         while (iterator.hasNext()) {
             ((WebSocketPassiveScannerDecorator) iterator.next()).setEnabled(enabled);
@@ -172,7 +172,7 @@ public class WebSocketPassiveScannerManager {
      *
      * @param enabled {@code true} if the scanner should be enabled, {@code false} otherwise
      */
-    public void setPassiveScanEnabled(WebSocketPassiveScanner scanner, boolean enabled) {
+    public void setEnable(WebSocketPassiveScanner scanner, boolean enabled) {
 
         Iterator<WebSocketPassiveScanner> iterator = getIterator();
         WebSocketPassiveScannerDecorator itScanner;
@@ -186,7 +186,7 @@ public class WebSocketPassiveScannerManager {
     }
 
     /** Shut down the background thread if any. */
-    private void stopWebSocketPassiveScanThread() {
+    private void shutdownThread() {
         if (this.passiveScanThread != null) {
             passiveScanThread.shutdown();
         }
@@ -198,13 +198,13 @@ public class WebSocketPassiveScannerManager {
      *
      * @param activation if true activates the background thread
      */
-    public void setPassiveScanActivation(boolean activation) {
-        if (passiveScanEnabled != activation) {
-            passiveScanEnabled = activation;
+    public void setThreadActivation(boolean activation) {
+        if (isThreadActive != activation) {
+            isThreadActive = activation;
             if (activation) {
-                startWebSocketPassiveScanThread();
+                startThread();
             } else {
-                stopWebSocketPassiveScanThread();
+                shutdownThread();
             }
         }
     }

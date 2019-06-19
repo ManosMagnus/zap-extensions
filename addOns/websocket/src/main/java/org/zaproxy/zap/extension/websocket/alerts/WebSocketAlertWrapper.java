@@ -90,7 +90,7 @@ public class WebSocketAlertWrapper {
         return alert.getWascId();
     }
 
-    public HttpMessage getHanshakeMessage() {
+    public HttpMessage getHandshakeMessage() {
         return alert.getMessage();
     }
 
@@ -223,6 +223,6 @@ public class WebSocketAlertWrapper {
             return new WebSocketAlertWrapper(webSocketMessageDTO, alert);
         }
 
-        public abstract WebSocketAlertWrapper raise();
+        protected abstract WebSocketAlertWrapper raise();
     }
 }

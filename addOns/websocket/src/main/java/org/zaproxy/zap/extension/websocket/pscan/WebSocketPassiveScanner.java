@@ -21,6 +21,7 @@ package org.zaproxy.zap.extension.websocket.pscan;
 
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
 
+/** Implement this if you want employ passive scan rules on WebSocket Messages. */
 public interface WebSocketPassiveScanner {
 
     String getName();

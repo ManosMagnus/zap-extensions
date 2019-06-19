@@ -19,25 +19,26 @@ CONFIDENCE_HIGH = 3;
  * This function scans passively WebSocket messages. The scan function will be called for
  * messages via ZAP.
  *
- * @param helper - the WebSocketPassiveHelper interface provides the raiseAlert method in order
- *               to raise the appropriate alerts
+ * @param helper - the WebSocketPassiveHelper interface provides the newAlert() method in order
+ *                 to raise the appropriate alerts
+ *
  * Some useful function(s) about  WebSocketPassiveHelper:
  * helper.newAlert() -> Returns an WebSocketAlertRaiser instance which is used
- *                            for building and raising alerts.
+ *                      for building and raising alerts.
 
  * * Some useful functions about WebSocketAlertRaiser:
  * * alertRaiser.setRiskConfidence(risk, confidence) -> Sets the Risk and the Confidence of the alert. (by default RISK_INFO, CONFIDENCE_MEDIUM).
  * * alertRaiser.setName(name)                       -> Sets the name (by default "").
  * * alertRaiser.setDescription(description)         -> Sets a description about potential threat (by default "").
- * * alertRaiser.setParam(param)                     -> Sets in which parameter the threat noticed (by default "").
+ * * alertRaiser.setParam(param)                     -> Sets in which parameter threat is noticed (by default "").
  * * alertRaiser.setSolution(solution)               -> Sets a possible solution (by default "").
  * * alertRaiser.setReference(reference)             -> Sets extra references (ex. a web link) (by default "").
- * * alertRaiser.setEvidence(evidence)               -> Sets what's the evidence of the potential thread (by default "").
+ * * alertRaiser.setEvidence(evidence)               -> Sets what's the evidence of potential thread (by default "").
  * * alertRaiser.setCweIdm(cweId)                    -> Sets the CWE ID of the issue (by default 0)
  * * alertRaiser.setWascId(wascId)                   -> Sets the WASC ID of the issue (by default 0)
  * * alertRaiser.raise()                             -> Build and Raise the alert (returns the WebSocketAlertWrapper)
 
- * @param msg - the Websocket Message being scanned. This is a WebSocketMessage object.
+ * @param msg - the Websocket Message being scanned. This is a WebSocketMessageDTO object.
  *
  * Some useful functions and fields of WebSocketMessageDTO:
  * msg.channel        -> Channel of the message (WebSocketChannelDTO)
@@ -51,7 +52,7 @@ CONFIDENCE_HIGH = 3;
  * * channel.id         -> Unique ID of the message (int)
  * * channel.host       -> Host of the WebSocket Server (String)
  * * channel.port       -> Port where the channel is connected at. Usually at 80 or 443.
- * * channel.url        -> URL used in HTTP handshake.
+ * * channel.url        -> URL used in HTTP handshake (String).
  */
 function scan(helper,msg) {
 

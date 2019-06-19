@@ -260,7 +260,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor
                 storage.setTable(table);
             }
             if (webSocketPassiveScannerManager != null) {
-                webSocketPassiveScannerManager.setTableWebSocketIfNot(table);
+                webSocketPassiveScannerManager.setTableIfNot(table);
             }
             if (View.isInitialised()) {
                 getWebSocketPanel().setTable(table);
@@ -437,8 +437,8 @@ public class ExtensionWebSocket extends ExtensionAdaptor
             webSocketScriptPassiveScanner = new ScriptsWebSocketPassiveScanner();
 
             webSocketPassiveScannerManager.add(webSocketScriptPassiveScanner);
-            webSocketPassiveScannerManager.setAllPluginPassiveScannersEnabled(true);
-            webSocketPassiveScannerManager.setPassiveScanActivation(true);
+            webSocketPassiveScannerManager.setAllEnable(true);
+            webSocketPassiveScannerManager.setThreadActivation(true);
         }
     }
 

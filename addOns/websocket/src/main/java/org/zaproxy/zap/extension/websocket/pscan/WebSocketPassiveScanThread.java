@@ -49,7 +49,7 @@ public class WebSocketPassiveScanThread extends Thread
     private LinkedBlockingQueue<MessageWrapper> messagesBuffer;
 
     /** {@code True} to enable the passive scan Thread */
-    private volatile boolean isPassiveScannerActive;
+    private volatile boolean isActive;
 
     /** Reference to Database. Used in order to pick messages for scanning */
     private TableWebSocket tableWebSocket;
@@ -62,33 +62,32 @@ public class WebSocketPassiveScanThread extends Thread
 
     /**
      * Initialize the passive scan in background thread. By default thread is inactive and not
-     * alive. In order to activate thread set {@link
-     * WebSocketPassiveScanThread#setPassiveScannerActive(boolean)} true and start thread with
-     * {@link WebSocketPassiveScanThread#start()}.
+     * alive. In order to activate thread set {@link WebSocketPassiveScanThread#setActive(boolean)}
+     * true and start thread with {@link WebSocketPassiveScanThread#start()}.
      *
      * @param passiveScannerManager the manager
      */
     public WebSocketPassiveScanThread(WebSocketPassiveScannerManager passiveScannerManager) {
         this.passiveScannerManager = passiveScannerManager;
-        this.isPassiveScannerActive = false;
+        this.isActive = false;
         messagesBuffer = new LinkedBlockingQueue<>();
     }
 
     /** @return true if the table was initialized */
-    public boolean hasTableWebSocket() {
+    public boolean hasTable() {
         return tableWebSocket != null;
     }
 
-    public void setTableWebSocket(TableWebSocket tableWebSocket) {
+    public void setTable(TableWebSocket tableWebSocket) {
         this.tableWebSocket = tableWebSocket;
     }
 
-    public boolean isPassiveScannerActive() {
-        return isPassiveScannerActive;
+    public boolean isActive() {
+        return isActive;
     }
 
-    public void setPassiveScannerActive(boolean passiveScannerActive) {
-        isPassiveScannerActive = passiveScannerActive;
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
     @Override
@@ -116,14 +115,14 @@ public class WebSocketPassiveScanThread extends Thread
         WebSocketMessageDTO currentMessage;
         Iterator<WebSocketPassiveScanner> iterator;
         WebSocketScanHelperImpl helper = new WebSocketScanHelperImpl(this);
-        while (isPassiveScannerActive) {
+        while (isActive) {
             if (messagesBuffer.isEmpty() || tableWebSocket == null) {
                 try {
                     Thread.sleep(SLEEP_TIME);
                 } catch (InterruptedException e) {
                     LOGGER.info("Sleeping was interrupted", e);
                 }
-                if (!isPassiveScannerActive) {
+                if (!isActive) {
                     break;
                 }
             } else {
@@ -153,7 +152,7 @@ public class WebSocketPassiveScanThread extends Thread
 
     @Override
     public void raiseAlert(WebSocketAlertWrapper websocketAlert) {
-        if (!isPassiveScannerActive) {
+        if (!isActive) {
             return;
         }
         passiveScannerManager.getAlertManager().alertFound(websocketAlert);
@@ -166,7 +165,7 @@ public class WebSocketPassiveScanThread extends Thread
 
     /** Shutdown the passive scan thread */
     public void shutdown() {
-        isPassiveScannerActive = false;
+        isActive = false;
     }
 
     private class MessageWrapper {

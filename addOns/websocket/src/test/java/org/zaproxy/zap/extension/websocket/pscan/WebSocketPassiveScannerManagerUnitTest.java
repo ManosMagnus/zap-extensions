@@ -136,8 +136,8 @@ public class WebSocketPassiveScannerManagerUnitTest extends WebSocketTestUtils {
         when(scanner1.getId()).thenReturn(1);
 
         // When
-        wsPscanManager.setAllPluginPassiveScannersEnabled(true);
-        wsPscanManager.setPassiveScanEnabled(scanner1, false);
+        wsPscanManager.setAllEnable(true);
+        wsPscanManager.setEnable(scanner1, false);
 
         // Then
         Iterator<WebSocketPassiveScanner> iterator = wsPscanManager.getEnabledIterator();
@@ -160,9 +160,9 @@ public class WebSocketPassiveScannerManagerUnitTest extends WebSocketTestUtils {
         when(scannerNot2.getId()).thenReturn(2);
 
         // When
-        wsPscanManager.setAllPluginPassiveScannersEnabled(true);
-        wsPscanManager.setPassiveScanEnabled(scannerNot1, false);
-        wsPscanManager.setPassiveScanEnabled(scannerNot2, false);
+        wsPscanManager.setAllEnable(true);
+        wsPscanManager.setEnable(scannerNot1, false);
+        wsPscanManager.setEnable(scannerNot2, false);
 
         // Then
         Iterator<WebSocketPassiveScanner> iterator = wsPscanManager.getEnabledIterator();
