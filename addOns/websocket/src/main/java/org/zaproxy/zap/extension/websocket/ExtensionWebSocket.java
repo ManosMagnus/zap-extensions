@@ -408,17 +408,12 @@ public class ExtensionWebSocket extends ExtensionAdaptor
         this.addAllChannelSenderListener(eventPublisher);
 
         // setup websocket passive scanner
-        if (extensionScript != null
-                && Control.getSingleton()
-                        .getExtensionLoader()
-                        .isExtensionEnabled(ExtensionAlert.NAME)) {
+        ExtensionAlert extensionAlert =
+                Control.getSingleton().getExtensionLoader().getExtension(ExtensionAlert.class);
+        if (extensionScript != null && extensionAlert != null) {
 
             // Set up AlertManager so as to use it in WebSocketPassiveScannerManager
-            AlertManager alertManager =
-                    new AlertManager(
-                            Control.getSingleton()
-                                    .getExtensionLoader()
-                                    .getExtension(ExtensionAlert.class));
+            AlertManager alertManager = new AlertManager(extensionAlert);
 
             webSocketPassiveScannerManager = new WebSocketPassiveScannerManager(alertManager);
 
