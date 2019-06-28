@@ -34,7 +34,7 @@ CONFIDENCE_HIGH = 3;
  * * alertRaiser.setSolution(solution)               -> Sets a possible solution (by default "").
  * * alertRaiser.setReference(reference)             -> Sets extra references (ex. a web link) (by default "").
  * * alertRaiser.setEvidence(evidence)               -> Sets what's the evidence of potential thread (by default "").
- * * alertRaiser.setCweIdm(cweId)                    -> Sets the CWE ID of the issue (by default 0)
+ * * alertRaiser.setCweId(cweId)                    -> Sets the CWE ID of the issue (by default 0)
  * * alertRaiser.setWascId(wascId)                   -> Sets the WASC ID of the issue (by default 0)
  * * alertRaiser.raise()                             -> Build and Raise the alert (returns the WebSocketAlertWrapper)
 
@@ -72,7 +72,7 @@ function scan(helper,msg) {
             .setSolution("Solution of the Alert.")
             .setReference("Reference of the Alert.")
             .setEvidence("Evidence of the Alert")
-            .setCweIdm(0)
+            .setCweId(0)
             .setWascId(0)
             .raise();
     }

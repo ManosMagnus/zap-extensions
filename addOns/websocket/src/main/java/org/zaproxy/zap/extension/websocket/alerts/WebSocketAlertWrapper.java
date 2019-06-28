@@ -82,7 +82,7 @@ public class WebSocketAlertWrapper {
         return alert.getReference();
     }
 
-    public int getCweIdm() {
+    public int getCweId() {
         return alert.getCweId();
     }
 
@@ -172,7 +172,7 @@ public class WebSocketAlertWrapper {
                                 + "Channel ID:"
                                 + webSocketMessageDTO.channel.id,
                         e);
-                return null;
+                return this;
             }
 
             alert.setMessage(handshakeMessage);
@@ -204,8 +204,8 @@ public class WebSocketAlertWrapper {
             return this;
         }
 
-        public WebSocketAlertBuilder setCweIdm(int cweIdm) {
-            alert.setCweId(cweIdm);
+        public WebSocketAlertBuilder setCweId(int cweId) {
+            alert.setCweId(cweId);
             return this;
         }
 
