@@ -45,8 +45,6 @@ function scan(helper,msg) {
     if(xmlDoc == null){
         return;
     }
-
-    var counter = 0;
     var commentsList = [];
     getComments(xmlDoc.getDocumentElement(), commentsList);
 
@@ -57,7 +55,6 @@ function scan(helper,msg) {
                     .setRiskConfidence(RISK_INFO, CONFIDENCE_MEDIUM)
                     .setName("Information Disclosure - Suspicious Comments in XML via WebSocket (script)")
                     .setDescription("The response appears to contain suspicious comments which may help an attacker.")
-                    .setParam(counter++)
                     .setSolution("Remove all comments that return information that may help an attacker and fix any underlying problems they refer to.")
                     .setEvidence(comment)
                     .setCweIdm(200) //CWE Id 200 - Information Exposure
