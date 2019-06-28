@@ -508,8 +508,9 @@ public class ExtensionWebSocket extends ExtensionAdaptor
         }
 
         // shut down Passive Scanner and remove observer
-        webSocketPassiveScannerManager.shutdownThread();
-        removeAllChannelObserver(webSocketPassiveScannerManager.getWebSocketScannerObserver());
+        if(webSocketPassiveScannerManager != null){
+            webSocketPassiveScannerManager.shutdownThread();
+        }
 
         // unregister the WebSocket Passive Scan script type
         if (extensionScript != null) {
