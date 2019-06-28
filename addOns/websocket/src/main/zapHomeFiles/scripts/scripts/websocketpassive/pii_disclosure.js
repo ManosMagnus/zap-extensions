@@ -47,7 +47,7 @@ function scan(helper,msg) {
                                             + " such as CC number, SSN and similar sensitive data."
                                             + "Credit Card type detected: " + creditCardType + ".")
                             .setEvidence(match)
-                            .setCweIdm(359)  // CWE-359: Exposure of Private Information ('Privacy Violation')
+                            .setCweId(359)  // CWE-359: Exposure of Private Information ('Privacy Violation')
                             .setWascId(13)  // WASC-13: Information Leakage
                             .raise();
                     }
