@@ -111,9 +111,9 @@ public class WebSocketPassiveScanThread extends Thread
     @Override
     public void run() {
         MessageWrapper messageWrap;
-        WebSocketPassiveScanner currentPassiveScanner;
+        WebSocketPassiveScannerDecorator currentPassiveScanner;
         WebSocketMessageDTO currentMessage;
-        Iterator<WebSocketPassiveScanner> iterator;
+        Iterator<WebSocketPassiveScannerDecorator> iterator;
         WebSocketScanHelperImpl helper = new WebSocketScanHelperImpl(this);
         while (isActive) {
             if (messagesBuffer.isEmpty() || tableWebSocket == null) {
@@ -130,13 +130,14 @@ public class WebSocketPassiveScanThread extends Thread
                 try {
                     currentMessage =
                             tableWebSocket.getMessage(messageWrap.messageId, messageWrap.channelId);
-                    iterator = passiveScannerManager.getEnabledIterator();
+                    iterator = passiveScannerManager.getIterator();
                     while (iterator.hasNext()) {
-                        currentPassiveScanner = iterator.next();
-                        currentPassiveScanner.scanMessage(
-                                helper.getWebSocketScanHelper(
-                                        currentPassiveScanner.getId(), currentMessage),
-                                currentMessage);
+                        if ((currentPassiveScanner = iterator.next()).isEnabled()) {
+                            currentPassiveScanner.scanMessage(
+                                    helper.getWebSocketScanHelper(
+                                            currentPassiveScanner.getId(), currentMessage),
+                                    currentMessage);
+                        }
                     }
                 } catch (DatabaseException e) {
                     LOGGER.warn("Could not get messages from database", e);

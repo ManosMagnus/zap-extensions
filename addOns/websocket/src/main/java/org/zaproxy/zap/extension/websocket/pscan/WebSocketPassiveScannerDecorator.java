@@ -32,6 +32,10 @@ class WebSocketPassiveScannerDecorator implements WebSocketPassiveScanner, Enabl
         this.webSocketPassiveScanner = webSocketPassiveScanner;
     }
 
+    public WebSocketPassiveScanner getWebSocketPassiveScanner() {
+        return webSocketPassiveScanner;
+    }
+
     @Override
     public String getName() {
         return webSocketPassiveScanner.getName();

@@ -49,7 +49,7 @@ public class WebSocketPassiveScannerManager {
     private AlertManager alertManager;
 
     /** List stores passive scanners */
-    private CopyOnWriteArraySet<WebSocketPassiveScanner> passiveScannersSet;
+    private CopyOnWriteArraySet<WebSocketPassiveScannerDecorator> passiveScannersSet;
 
     /** True if server proxies should be ignored */
     private boolean isServerModeIgnored = true;
@@ -102,7 +102,7 @@ public class WebSocketPassiveScannerManager {
      *
      * @return list of the passive scanners
      */
-    private CopyOnWriteArraySet<WebSocketPassiveScanner> getPassiveScannersSet() {
+    private CopyOnWriteArraySet<WebSocketPassiveScannerDecorator> getPassiveScannersSet() {
         if (passiveScannersSet == null) {
             passiveScannersSet = new CopyOnWriteArraySet<>();
         }
@@ -161,9 +161,9 @@ public class WebSocketPassiveScannerManager {
      * @param enabled {@code true} if the scanners should be enabled, {@code false} otherwise
      */
     public void setAllEnable(boolean enabled) {
-        Iterator<WebSocketPassiveScanner> iterator = getIterator();
+        Iterator<WebSocketPassiveScannerDecorator> iterator = this.getIterator();
         while (iterator.hasNext()) {
-            ((WebSocketPassiveScannerDecorator) iterator.next()).setEnabled(enabled);
+            iterator.next().setEnabled(enabled);
         }
     }
 
@@ -174,10 +174,10 @@ public class WebSocketPassiveScannerManager {
      */
     public void setEnable(WebSocketPassiveScanner scanner, boolean enabled) {
 
-        Iterator<WebSocketPassiveScanner> iterator = getIterator();
+        Iterator<WebSocketPassiveScannerDecorator> iterator = this.getIterator();
         WebSocketPassiveScannerDecorator itScanner;
         while (iterator.hasNext()) {
-            itScanner = ((WebSocketPassiveScannerDecorator) iterator.next());
+            itScanner = iterator.next();
             if (itScanner.equals(scanner)) {
                 itScanner.setEnabled(enabled);
                 return;
@@ -223,15 +223,8 @@ public class WebSocketPassiveScannerManager {
     }
 
     /** @return an iterator for all WebSocket Passive Scanners */
-    protected Iterator<WebSocketPassiveScanner> getIterator() {
+    protected Iterator<WebSocketPassiveScannerDecorator> getIterator() {
         return getPassiveScannersSet().iterator();
-    }
-
-    /** @return an iterator for enabled WebSocket Passive Scanners */
-    protected Iterator<WebSocketPassiveScanner> getEnabledIterator() {
-        return getPassiveScannersSet().stream()
-                .filter(x -> ((WebSocketPassiveScannerDecorator) x).isEnabled())
-                .iterator();
     }
 
     public boolean isScannerContained(WebSocketPassiveScanner webSocketPassiveScanner) {
