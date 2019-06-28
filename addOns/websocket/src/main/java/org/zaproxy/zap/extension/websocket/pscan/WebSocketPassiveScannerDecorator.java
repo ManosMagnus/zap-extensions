@@ -24,7 +24,7 @@ import org.zaproxy.zap.utils.EnableableInterface;
 
 class WebSocketPassiveScannerDecorator implements WebSocketPassiveScanner, EnableableInterface {
 
-    protected final WebSocketPassiveScanner webSocketPassiveScanner;
+    private final WebSocketPassiveScanner webSocketPassiveScanner;
 
     private boolean isEnabled = false;
 
