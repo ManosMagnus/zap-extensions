@@ -1,7 +1,7 @@
 // This Script will seek at incoming WebSocket XML formatted messages for suspicious comments.
 
 // * Is based on: org.zaproxy.zap.extension.pscanrulesBeta.InformationDisclosureSuspiciousComments
-// ** And the comment list is copied by
+// ** And the comment list is copied from
 // *** https://github.com/zaproxy/zap-extensions/blob/master/addOns/pscanrulesBeta/src/main/zapHomeFiles/xml/suspicious-comments.txt
 
 // Author: Manos Kirtas (manolis.kirt@gmail.com)
@@ -58,7 +58,7 @@ function scan(helper,msg) {
                     .setName("Information Disclosure - Suspicious Comments in XML via WebSocket (script)")
                     .setDescription("The response appears to contain suspicious comments which may help an attacker.")
                     .setParam(counter++)
-                    .setSolution("The response appears to contain suspicious comments which may help an attacker.")
+                    .setSolution("Remove all comments that return information that may help an attacker and fix any underlying problems they refer to.")
                     .setEvidence(comment)
                     .setCweIdm(200) //CWE Id 200 - Information Exposure
                     .setWascId(13) //WASC Id 13 - Info Leakage
