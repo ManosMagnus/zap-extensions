@@ -62,8 +62,7 @@ public class WebSocketPassiveScanThread extends Thread
 
     /**
      * Initialize the passive scan in background thread. By default thread is inactive and not
-     * alive. In order to activate thread set {@link WebSocketPassiveScanThread#setActive(boolean)}
-     * true and start thread with {@link WebSocketPassiveScanThread#start()}.
+     * alive. In order to activate thread use {@link WebSocketPassiveScanThread#start()}
      *
      * @param passiveScannerManager the manager
      */
@@ -86,10 +85,6 @@ public class WebSocketPassiveScanThread extends Thread
 
     public boolean isActive() {
         return isActive;
-    }
-
-    public void setActive(boolean active) {
-        isActive = active;
     }
 
     @Override
@@ -169,6 +164,12 @@ public class WebSocketPassiveScanThread extends Thread
     /** Shutdown the passive scan thread */
     public void shutdown() {
         isActive = false;
+    }
+
+    @Override
+    public synchronized void start() {
+        isActive = true;
+        super.start();
     }
 
     private class MessageWrapper {

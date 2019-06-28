@@ -42,9 +42,6 @@ public class WebSocketPassiveScannerManager {
     /** The background thread where the passive scans are running */
     private WebSocketPassiveScanThread passiveScanThread;
 
-    /** {@code false} if passive scans are disabled */
-    private boolean isThreadActive = false;
-
     /** Used to raise Alert Messages */
     private AlertManager alertManager;
 
@@ -84,17 +81,6 @@ public class WebSocketPassiveScannerManager {
             passiveScanThread = new WebSocketPassiveScanThread(this);
         }
         return passiveScanThread;
-    }
-
-    /**
-     * Begin and activate the background thread where passive scans are running. Do nothing if the
-     * background thread have already been running
-     */
-    private void startThread() {
-        if (!passiveScanThread.isAlive()) {
-            passiveScanThread.setActive(true);
-            passiveScanThread.start();
-        }
     }
 
     /**
@@ -188,27 +174,24 @@ public class WebSocketPassiveScannerManager {
         }
     }
 
-    /** Shut down the background thread if any. */
-    private void shutdownThread() {
-        if (this.passiveScanThread != null) {
-            passiveScanThread.shutdown();
+    /**
+     * Start the background thread where passive scans are running. Do nothing if the background
+     * thread have already been running
+     */
+    public void startThread() {
+        if (passiveScanThread != null && !passiveScanThread.isAlive()) {
+            passiveScanThread.start();
+        } else {
+            LOGGER.info("Passive scan thread have already been running");
         }
     }
 
-    /**
-     * Activating or Deactivating the passive scanning. That's not related with any {@link
-     * WebSocketPassiveScanner} just with background thread {@link WebSocketPassiveScanThread}
-     *
-     * @param activation if true activates the background thread
-     */
-    public void setThreadActivation(boolean activation) {
-        if (isThreadActive != activation) {
-            isThreadActive = activation;
-            if (activation) {
-                startThread();
-            } else {
-                shutdownThread();
-            }
+    /** Shut down the background thread if it have been activated. */
+    public void shutdownThread() {
+        if (this.passiveScanThread != null && passiveScanThread.isActive()) {
+            passiveScanThread.shutdown();
+        } else {
+            LOGGER.info("Passive scan thread had already been closed");
         }
     }
 

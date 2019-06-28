@@ -433,7 +433,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor
 
             webSocketPassiveScannerManager.add(webSocketScriptPassiveScanner);
             webSocketPassiveScannerManager.setAllEnable(true);
-            webSocketPassiveScannerManager.setThreadActivation(true);
+            webSocketPassiveScannerManager.startThread();
         }
     }
 
@@ -505,6 +505,15 @@ public class ExtensionWebSocket extends ExtensionAdaptor
         if (extensionScript != null) {
             removeAllChannelSenderListener(webSocketSenderScriptListener);
             extensionScript.removeScripType(websocketSenderSciptType);
+        }
+
+        // shut down Passive Scanner and remove observer
+        webSocketPassiveScannerManager.shutdownThread();
+        removeAllChannelObserver(webSocketPassiveScannerManager.getWebSocketScannerObserver());
+
+        // unregister the WebSocket Passive Scan script type
+        if (extensionScript != null) {
+            extensionScript.removeScripType(websocketPassiveScanScriptType);
         }
 
         eventPublisher.shutdown();
