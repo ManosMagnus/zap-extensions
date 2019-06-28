@@ -68,6 +68,7 @@ public class WebSocketPassiveScanThread extends Thread
      */
     public WebSocketPassiveScanThread(WebSocketPassiveScannerManager passiveScannerManager) {
         super("ZAP-WS-PassiveScanner");
+        super.setDaemon(true);
 
         this.passiveScannerManager = passiveScannerManager;
         this.isActive = false;
