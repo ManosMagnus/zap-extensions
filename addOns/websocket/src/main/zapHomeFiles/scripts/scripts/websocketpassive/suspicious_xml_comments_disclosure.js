@@ -57,7 +57,7 @@ function scan(helper,msg) {
                     .setDescription("The response appears to contain suspicious comments which may help an attacker.")
                     .setSolution("Remove all comments that return information that may help an attacker and fix any underlying problems they refer to.")
                     .setEvidence(comment)
-                    .setCweIdm(200) //CWE Id 200 - Information Exposure
+                    .setCweId(200) //CWE Id 200 - Information Exposure
                     .setWascId(13) //WASC Id 13 - Info Leakage
                     .raise();
             }
