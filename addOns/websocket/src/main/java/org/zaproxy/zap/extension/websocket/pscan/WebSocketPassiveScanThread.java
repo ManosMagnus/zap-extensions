@@ -68,6 +68,8 @@ public class WebSocketPassiveScanThread extends Thread
      * @param passiveScannerManager the manager
      */
     public WebSocketPassiveScanThread(WebSocketPassiveScannerManager passiveScannerManager) {
+        super("ZAP-WS-PassiveScanner");
+
         this.passiveScannerManager = passiveScannerManager;
         this.isActive = false;
         messagesBuffer = new LinkedBlockingQueue<>();
