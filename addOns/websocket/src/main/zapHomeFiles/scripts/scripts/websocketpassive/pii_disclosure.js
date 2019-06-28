@@ -1,6 +1,6 @@
 
-// This script scan for the presence of Personally Information Identifiable in incoming WebSocket Messages.
-// More Specific, it passively scan messages for credit card numbers
+// This script scans for the presence of Personally Information Identifiable in incoming WebSocket Messages.
+// More specifically, it passively scan messages for credit card numbers
 
 // * This script is based on org.zaproxy.zap.extension.pscanrulesAlpha.Piicanner
 
