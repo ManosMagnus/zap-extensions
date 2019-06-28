@@ -29,8 +29,6 @@ function scan(helper,msg) {
     if(msg.opcode != OPCODE_TEXT || msg.isOutgoing){
         return;
     }
-
-    var counter = 0;
     var message = String(msg.getReadablePayload()).valueOf();
 
     var numberSequences = getNumberOfSequence(message,SEQUENCE_NUM);
@@ -48,7 +46,6 @@ function scan(helper,msg) {
                             .setDescription("The response contains Personally Identifiable Information,"
                                             + " such as CC number, SSN and similar sensitive data."
                                             + "Credit Card type detected: " + creditCardType + ".")
-                            .setParam(counter++)
                             .setEvidence(match)
                             .setCweIdm(359)  // CWE-359: Exposure of Private Information ('Privacy Violation')
                             .setWascId(13)  // WASC-13: Information Leakage
