@@ -21,7 +21,6 @@ package org.zaproxy.zap.extension.websocket.pscan;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -52,9 +51,9 @@ public class WebSocketPassiveScannerManagerUnitTest extends WebSocketTestUtils {
         // Given
         WebSocketPassiveScanner wsScanner = mock(WebSocketPassiveScanner.class);
         // When
-        WebSocketPassiveScanner wsPlugin = wsPscanManager.add(wsScanner);
+        boolean result = wsPscanManager.add(wsScanner);
         // Then
-        assertNotNull(wsPlugin);
+        assertTrue(result);
         assertTrue(wsPscanManager.getIterator().hasNext());
     }
 
@@ -71,13 +70,13 @@ public class WebSocketPassiveScannerManagerUnitTest extends WebSocketTestUtils {
         when(wsScanner2.getId()).thenReturn(2);
 
         // When
-        WebSocketPassiveScanner wsPlugin1 = wsPscanManager.add(wsScanner1);
-        WebSocketPassiveScanner wsPlugin2 = wsPscanManager.add(wsScanner2);
+        boolean resultPlugin1 = wsPscanManager.add(wsScanner1);
+        boolean resultPlugin2 = wsPscanManager.add(wsScanner2);
 
         // Then
-        assertTrue(wsPscanManager.isScannerContained(wsPlugin1));
-        assertNull(wsPlugin2);
-        assertFalse(wsPscanManager.isScannerContained(wsPlugin2));
+        assertTrue(resultPlugin1);
+        assertNotNull(wsPscanManager.isContained(wsScanner1));
+        assertFalse(resultPlugin2);
     }
 
     @Test
@@ -86,20 +85,20 @@ public class WebSocketPassiveScannerManagerUnitTest extends WebSocketTestUtils {
         WebSocketPassiveScanner scanner1 = mock(WebSocketPassiveScanner.class);
         when(scanner1.getName()).thenReturn("WsScanner-1");
         when(scanner1.getId()).thenReturn(1);
-        WebSocketPassiveScanner wsPlugin1 = wsPscanManager.add(scanner1);
+        boolean resultPlugin1 = wsPscanManager.add(scanner1);
 
         WebSocketPassiveScanner scanner2 = mock(WebSocketPassiveScanner.class);
         when(scanner2.getName()).thenReturn("WsScanner-2");
         when(scanner2.getId()).thenReturn(2);
-        WebSocketPassiveScanner wsPlugin2 = wsPscanManager.add(scanner2);
+        wsPscanManager.add(scanner2);
 
         // When
-        boolean result = wsPscanManager.removeScanner(wsPlugin2);
+        boolean result = wsPscanManager.removeScanner(scanner2);
 
         // Then
-        assertNotNull(wsPlugin1);
+        assertTrue(resultPlugin1);
         assertTrue(result);
-        assertFalse(wsPscanManager.isScannerContained(wsPlugin2));
+        assertFalse(wsPscanManager.isContained(scanner2));
     }
 
     @Test
@@ -108,12 +107,12 @@ public class WebSocketPassiveScannerManagerUnitTest extends WebSocketTestUtils {
         WebSocketPassiveScanner scanner1 = mock(WebSocketPassiveScanner.class);
         when(scanner1.getName()).thenReturn("WsScanner-1");
         when(scanner1.getId()).thenReturn(1);
-        WebSocketPassiveScanner wsPlugin1 = wsPscanManager.add(scanner1);
+        wsPscanManager.add(scanner1);
 
         WebSocketPassiveScanner scanner2 = mock(WebSocketPassiveScanner.class);
         when(scanner2.getName()).thenReturn("WsScanner-2");
         when(scanner2.getId()).thenReturn(2);
-        WebSocketPassiveScanner wsPlugin2 = wsPscanManager.add(scanner2);
+        wsPscanManager.add(scanner2);
 
         // When
         Iterator<WebSocketPassiveScannerDecorator> iterator = wsPscanManager.getIterator();
@@ -124,8 +123,8 @@ public class WebSocketPassiveScannerManagerUnitTest extends WebSocketTestUtils {
         }
 
         // Then
-        assertTrue(wsPscanManager.isScannerContained(wsPlugin1));
-        assertTrue(wsPscanManager.isScannerContained(wsPlugin2));
+        assertTrue(wsPscanManager.isContained(scanner1));
+        assertTrue(wsPscanManager.isContained(scanner2));
     }
 
     @Test

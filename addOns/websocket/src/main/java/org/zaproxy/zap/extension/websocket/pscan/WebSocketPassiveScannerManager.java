@@ -126,16 +126,19 @@ public class WebSocketPassiveScannerManager {
         passiveScanThread.setTable(tableWebSocket);
     }
 
-    /** Adds the WebSocketPassive Scanner if not null */
-    public synchronized WebSocketPassiveScannerDecorator add(
-            WebSocketPassiveScanner passiveScanner) {
+    /**
+     * Adds the WebSocketPassive Scanner if not null
+     *
+     * @return {@code true} is passiveScanner was added properly.
+     */
+    public synchronized boolean add(WebSocketPassiveScanner passiveScanner) {
 
-        WebSocketPassiveScannerDecorator wsPlugin =
-                new WebSocketPassiveScannerDecorator(passiveScanner);
         if (passiveScanner == null) {
             throw new IllegalArgumentException("Parameter passiveScanner must not be null.");
         }
-        return addPlugin(wsPlugin) ? wsPlugin : null;
+        WebSocketPassiveScannerDecorator wsPlugin =
+                new WebSocketPassiveScannerDecorator(passiveScanner);
+        return addPlugin(wsPlugin);
     }
 
     /**
@@ -219,7 +222,7 @@ public class WebSocketPassiveScannerManager {
      * @return {@code true} if passive scanner is dropped from list successfully.
      */
     public synchronized boolean removeScanner(WebSocketPassiveScanner passiveScanner) {
-        return getPassiveScannersSet().remove(passiveScanner);
+        return getPassiveScannersSet().remove(new WebSocketPassiveScannerDecorator(passiveScanner));
     }
 
     /** @return an iterator for all WebSocket Passive Scanners */
@@ -227,12 +230,9 @@ public class WebSocketPassiveScannerManager {
         return getPassiveScannersSet().iterator();
     }
 
-    public boolean isScannerContained(WebSocketPassiveScanner webSocketPassiveScanner) {
-        return getPassiveScannersSet().contains(webSocketPassiveScanner);
-    }
-
-    public int getScannerListSize() {
-        return getPassiveScannersSet().size();
+    public boolean isContained(WebSocketPassiveScanner webSocketPassiveScanner) {
+        return getPassiveScannersSet()
+                .contains(new WebSocketPassiveScannerDecorator(webSocketPassiveScanner));
     }
 
     public boolean isServerModeIgnored() {
