@@ -507,13 +507,9 @@ public class ExtensionWebSocket extends ExtensionAdaptor
             extensionScript.removeScripType(websocketSenderSciptType);
         }
 
-        // shut down Passive Scanner and remove observer
+        // shut down Passive Scanner & unregister the WebSocket Passive Scan script type
         if (webSocketPassiveScannerManager != null) {
             webSocketPassiveScannerManager.shutdownThread();
-        }
-
-        // unregister the WebSocket Passive Scan script type
-        if (extensionScript != null) {
             extensionScript.removeScripType(websocketPassiveScanScriptType);
         }
 
