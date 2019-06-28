@@ -75,7 +75,7 @@ public class WebSocketPassiveScannerManagerUnitTest extends WebSocketTestUtils {
 
         // Then
         assertTrue(resultPlugin1);
-        assertNotNull(wsPscanManager.isContained(wsScanner1));
+        assertTrue(wsPscanManager.isContained(wsScanner1));
         assertFalse(resultPlugin2);
     }
 
@@ -143,30 +143,4 @@ public class WebSocketPassiveScannerManagerUnitTest extends WebSocketTestUtils {
         assertFalse(iterator.hasNext());
     }
 
-    @Test
-    public void shouldIterateOnlyOverEnabledScanners() {
-        // Given
-        WebSocketPassiveScanner scannerEnabled = mock(WebSocketPassiveScanner.class);
-        when(scannerEnabled.getName()).thenReturn("WsScanner-Enabled");
-        when(scannerEnabled.getId()).thenReturn(1);
-
-        WebSocketPassiveScanner scannerNot1 = mock(WebSocketPassiveScanner.class);
-        when(scannerNot1.getName()).thenReturn("WsScanner-not-1");
-        when(scannerNot1.getId()).thenReturn(2);
-
-        WebSocketPassiveScanner scannerNot2 = mock(WebSocketPassiveScanner.class);
-        when(scannerNot2.getName()).thenReturn("WsScanner-not-1");
-        when(scannerNot2.getId()).thenReturn(2);
-
-        // When
-        wsPscanManager.setAllEnable(true);
-        wsPscanManager.setEnable(scannerNot1, false);
-        wsPscanManager.setEnable(scannerNot2, false);
-
-        // Then
-        Iterator<WebSocketPassiveScannerDecorator> iterator = wsPscanManager.getIterator();
-        while (iterator.hasNext()) {
-            assertTrue(iterator.next().equals(scannerEnabled));
-        }
-    }
 }
