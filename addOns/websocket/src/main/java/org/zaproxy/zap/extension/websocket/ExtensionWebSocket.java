@@ -587,6 +587,9 @@ public class ExtensionWebSocket extends ExtensionAdaptor
         } catch (NoSuchFileException e) {
             return;
         } catch (IOException e) {
+            logger.warn(
+                    "A problem occurred while trying to import scripts for " + scriptType.getName(),
+                    e);
             e.printStackTrace();
         }
     }
