@@ -96,19 +96,11 @@ public class WebSocketPassiveScannerManager {
     }
 
     /**
-     * Sets the {@link TableWebSocket} if have not been yet. In order to force manager to update the
-     * table use {@link WebSocketPassiveScannerManager#setTable(TableWebSocket)}
+     * Sets/Updates the {@link TableWebSocket} for passive scanner.
      *
-     * @param tableWebSocket the table
+     * @param tableWebSocket the table is going to be set
      */
-    public void setTableIfNot(TableWebSocket tableWebSocket) {
-        if (!getWebSocketPassiveScanThread().hasTable()) {
-            passiveScanThread.setTable(tableWebSocket);
-        }
-    }
-
-    /** Setting the table WebSocket */
-    private void setTable(TableWebSocket tableWebSocket) {
+    public void setTable(TableWebSocket tableWebSocket) {
         passiveScanThread.setTable(tableWebSocket);
     }
 
