@@ -104,6 +104,9 @@ public class WebSocketPassiveScannerManager {
         passiveScanThread.setTable(tableWebSocket);
     }
 
+    public boolean hasTable() {
+        return passiveScanThread.hasTable();
+    }
     /**
      * Adds the WebSocketPassive Scanner if not null
      *

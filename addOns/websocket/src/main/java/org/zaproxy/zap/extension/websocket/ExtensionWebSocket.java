@@ -440,6 +440,10 @@ public class ExtensionWebSocket extends ExtensionAdaptor
     @Override
     public void postInit() {
         super.postInit();
+
+        if (webSocketPassiveScannerManager != null && !webSocketPassiveScannerManager.hasTable()) {
+            webSocketPassiveScannerManager.setTable(table);
+        }
     }
 
     @Override
