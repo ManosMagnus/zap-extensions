@@ -25,11 +25,13 @@ function scan(helper,msg) {
         return;
     }
     var message = String(msg.getReadablePayload()).valueOf();
+    var matches;
+
     if( (matches = message.match(base64Regex)) != null ){
 
         matches.forEach(function(evidence){
 
-            decodedEvidence = new JavaString(base64Decoder.decode(evidence));
+            var decodedEvidence = new JavaString(base64Decoder.decode(evidence));
             if(PRINT_RESULTS){
                 print("Message: " + message);
                 print("Evidence: " + evidence);
@@ -39,7 +41,7 @@ function scan(helper,msg) {
             helper.newAlert()
                 .setRiskConfidence(RISK_INFO, CONFIDENCE_MEDIUM)
                 .setName("Base64 Disclosure in WebSocket message (script)")
-                .setDescription("A Base64-encoded string has been founded in the websocket incoming message. Base64-encoded data may contain sensitive" +
+                .setDescription("A Base64-encoded string has been founded in the websocket incoming message. Base64-encoded data may contain sensitive " +
                                 "information such as usernames, passwords or cookies which should be further inspected. Decode evidence: "
                                 + decodedEvidence + ".")
                 .setSolution("Base64-encoding should not be used to store or send sensitive information.")
