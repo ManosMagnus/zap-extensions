@@ -19,11 +19,12 @@
  */
 package org.zaproxy.zap.extension.websocket;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -38,7 +39,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import javax.swing.ImageIcon;
 import org.apache.log4j.Logger;
 import org.parosproxy.paros.Constant;
@@ -155,7 +155,13 @@ public class ExtensionWebSocket extends ExtensionAdaptor
     public static final String SCRIPT_TYPE_WEBSOCKET_PASSIVE = "websocketpassive";
 
     /** Used to add the default scripts */
-    private static final String SCRIPTS_FOLDER = Constant.getZapHome() + "/scripts/scripts/";
+    private static final String SCRIPT_TEMPLATE_DIR = "scripts/templates/";
+
+    /** Used to distinguish templates from default scripts */
+    private static final String SCRIPT_TEMPLATE_SUFFIX = "Template";
+
+    /** User's scripts directory */
+    private static final String SCRIPT_USERS_DIR = "scripts/scripts/";
 
     /** Used to shorten the time, a listener is started on a WebSocket channel. */
     private ExecutorService listenerThreadPool;
@@ -450,11 +456,19 @@ public class ExtensionWebSocket extends ExtensionAdaptor
     }
 
     @Override
+    public void postInstall() {
+        super.postInstall();
+
+        if (webSocketPassiveScannerManager != null) {
+            registerDefaultScripts(websocketPassiveScanScriptType);
+        }
+    }
+
+    @Override
     public void postInit() {
         super.postInit();
 
         if (webSocketPassiveScannerManager != null) {
-            registerUserScripts(websocketPassiveScanScriptType);
 
             if (!webSocketPassiveScannerManager.hasTable()) {
                 webSocketPassiveScannerManager.setTable(table);
@@ -551,46 +565,48 @@ public class ExtensionWebSocket extends ExtensionAdaptor
         return Constant.messages.getString("websocket.desc");
     }
 
-    private void registerUserScripts(ScriptType scriptType) {
-        String folder = SCRIPTS_FOLDER + scriptType.getName() + '/';
-        Path scriptFolderPath = Paths.get(folder);
-        try (Stream<Path> scriptFilePaths = Files.list(scriptFolderPath)) {
-            scriptFilePaths
-                    .map(path -> path.toFile())
-                    .filter(file -> file.isFile()) // Keep only those which are files
-                    .map(
-                            file -> {
-                                return new ScriptWrapper(
-                                        file.getName(),
-                                        "",
-                                        extensionScript.getEngineNameForExtension(
-                                                file.getName()
-                                                        .substring(
-                                                                file.getName().lastIndexOf(".")
-                                                                        + 1)),
-                                        scriptType,
-                                        true,
-                                        file);
-                            })
+    private void registerDefaultScripts(ScriptType scriptType) {
 
-                    // Load the scripts from ExtensionScript(if not an IOException)
-                    .map(scriptWrapper -> loadScript(scriptWrapper))
-                    // Check if they are null
-                    .filter(maybeScriptWrapper -> maybeScriptWrapper.isPresent())
-                    // Get the ScriptWrapper
-                    .map(maybeScriptWrapper -> maybeScriptWrapper.get())
-                    .filter(
-                            scriptWrapper ->
-                                    this.extensionScript.getScript(scriptWrapper.getName()) == null)
-                    .forEach(scriptWrapper -> this.extensionScript.addScript(scriptWrapper, false));
+        List<String> addOnFiles = getAddOn().getFiles();
 
-        } catch (NoSuchFileException e) {
-            return;
-        } catch (IOException e) {
-            logger.warn(
-                    "A problem occurred while trying to import scripts for " + scriptType.getName(),
-                    e);
-        }
+        addOnFiles.stream()
+                .filter(
+                        fileName ->
+                                fileName.startsWith(
+                                                SCRIPT_TEMPLATE_DIR + scriptType.getName() + "/")
+                                        && !fileName.contains(SCRIPT_TEMPLATE_SUFFIX))
+                // Copy Template to script folder
+                .map(this::createScriptFromTemplate)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .map(
+                        file -> {
+                            String fileName =
+                                    file.getName().substring(file.getName().lastIndexOf("/") + 1);
+
+                            return new ScriptWrapper(
+                                    fileName.substring(0, fileName.lastIndexOf(".")),
+                                    "",
+                                    extensionScript.getEngineNameForExtension(
+                                            fileName.substring(fileName.lastIndexOf(".") + 1)),
+                                    scriptType,
+                                    true,
+                                    file);
+                        })
+                // Load the scripts from ExtensionScript(if not an IOException)
+                .map(this::loadScript)
+                // Check if they are null
+                .filter(Optional::isPresent)
+                // Get the ScriptWrapper
+                .map(Optional::get)
+                .filter(
+                        scriptWrapper ->
+                                this.extensionScript.getScript(scriptWrapper.getName()) == null)
+                .forEach(
+                        scriptWrapper -> {
+                            scriptWrapper.setLoadOnStart(true);
+                            this.extensionScript.addScript(scriptWrapper, false);
+                        });
     }
 
     private Optional<ScriptWrapper> loadScript(ScriptWrapper scriptWrapper) {
@@ -598,6 +614,32 @@ public class ExtensionWebSocket extends ExtensionAdaptor
             return Optional.of(this.extensionScript.loadScript(scriptWrapper));
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
+            return Optional.empty();
+        }
+    }
+
+    private Optional<File> createScriptFromTemplate(String pathToTemplate) {
+        Path newScriptPath = null;
+        try {
+            int scriptTypeIndex =
+                    pathToTemplate.lastIndexOf("/", pathToTemplate.lastIndexOf("/") - 1);
+
+            newScriptPath =
+                    Paths.get(
+                            Constant.getZapHome()
+                                    + SCRIPT_USERS_DIR
+                                    + pathToTemplate.substring(scriptTypeIndex));
+
+            if (!Files.exists(newScriptPath.getParent())) {
+                Files.createDirectories(newScriptPath.getParent());
+            }
+
+            Files.copy(Paths.get(Constant.getZapHome() + pathToTemplate), newScriptPath);
+            return Optional.of(newScriptPath.toFile());
+        } catch (FileAlreadyExistsException e) {
+            return Optional.of(new File(newScriptPath.toUri()));
+        } catch (IOException e) {
+            logger.error("Template can't be copied to script directory", e);
             return Optional.empty();
         }
     }
