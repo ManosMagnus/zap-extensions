@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -575,7 +574,6 @@ public class ExtensionWebSocket extends ExtensionAdaptor
                                 fileName.startsWith(
                                                 SCRIPT_TEMPLATE_DIR + scriptType.getName() + "/")
                                         && !fileName.contains(SCRIPT_TEMPLATE_SUFFIX))
-                // Copy Template to script folder
                 .map(this::createScriptFromTemplate)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -593,11 +591,8 @@ public class ExtensionWebSocket extends ExtensionAdaptor
                                     true,
                                     file);
                         })
-                // Load the scripts from ExtensionScript(if not an IOException)
                 .map(this::loadScript)
-                // Check if they are null
                 .filter(Optional::isPresent)
-                // Get the ScriptWrapper
                 .map(Optional::get)
                 .filter(
                         scriptWrapper ->
@@ -619,25 +614,24 @@ public class ExtensionWebSocket extends ExtensionAdaptor
     }
 
     private Optional<File> createScriptFromTemplate(String pathToTemplate) {
-        Path newScriptPath = null;
         try {
             int scriptTypeIndex =
                     pathToTemplate.lastIndexOf("/", pathToTemplate.lastIndexOf("/") - 1);
 
-            newScriptPath =
+            Path newScriptPath =
                     Paths.get(
                             Constant.getZapHome()
                                     + SCRIPT_USERS_DIR
                                     + pathToTemplate.substring(scriptTypeIndex));
 
-            if (!Files.exists(newScriptPath.getParent())) {
-                Files.createDirectories(newScriptPath.getParent());
+            if (Files.notExists(newScriptPath)) {
+                if (Files.notExists(newScriptPath.getParent())) {
+                    Files.createDirectories(newScriptPath.getParent());
+                }
+                Files.copy(Paths.get(Constant.getZapHome() + pathToTemplate), newScriptPath);
             }
 
-            Files.copy(Paths.get(Constant.getZapHome() + pathToTemplate), newScriptPath);
             return Optional.of(newScriptPath.toFile());
-        } catch (FileAlreadyExistsException e) {
-            return Optional.of(new File(newScriptPath.toUri()));
         } catch (IOException e) {
             logger.error("Template can't be copied to script directory", e);
             return Optional.empty();
