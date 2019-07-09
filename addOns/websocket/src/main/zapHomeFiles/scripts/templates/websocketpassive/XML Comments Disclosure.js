@@ -10,13 +10,13 @@ OPCODE_TEXT = 0x1;
 RISK_INFO 	= 0;
 CONFIDENCE_MEDIUM = 2;
 
-DocumentBuilderFactory = Java.type("javax.xml.parsers.DocumentBuilderFactory");
-StringReader = Java.type("java.io.StringReader");
-InputSource = Java.type("org.xml.sax.InputSource");
-Node = Java.type("org.w3c.dom.Node");
-Comment = Java.type("org.w3c.dom.Comment");
+var DocumentBuilderFactory = Java.type("javax.xml.parsers.DocumentBuilderFactory");
+var StringReader = Java.type("java.io.StringReader");
+var InputSource = Java.type("org.xml.sax.InputSource");
+var Node = Java.type("org.w3c.dom.Node");
+var Comment = Java.type("org.w3c.dom.Comment");
 
-commentPatterns = [ /\bTODO\b/gmi,
+var commentPatterns = [ /\bTODO\b/gmi,
                   /\bFIXME\b/gmi,
                   /\bBUG\b/gmi,
                   /\bBUGS\b/gmi,
@@ -40,7 +40,7 @@ function scan(helper,msg) {
     }
 
     var message = String(msg.getReadablePayload()).valueOf();
-    xmlDoc = getParsedDocument(message);
+    var xmlDoc = getParsedDocument(message);
 
     if(xmlDoc == null){
         return;
