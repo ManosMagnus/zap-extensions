@@ -11,5 +11,31 @@
         <h2 id="scripts">Scripts</h2>
         Scripts which are included by default in the add-on and they implement the following WebSocket passive scan rules:
 
+        <h3>Information Disclosure: Suspicious XML Comments</h3>
+
+        This script seek at incoming WebSocket messages payloads, which are XML formated, for suspicious comments. The comments it is searching for are relevant to components with which an attacker can extract usefull information. Comments like FIXME, BUG, etc might be helpful for further attacks targeting the weaknesses of the web application.<br>
+
+        <br>
+        <table border="1"  width = "500">
+            <tr><th>Use case</th><th>Outcome</th></tr>
+            <tr><td>
+                <xmp><xml_test><!-- This is a comments section --></xml_test></xmp>
+            </td><td>True Negative</td>
+            </tr>
+            <tr><td>
+                <xmp><user_form><!-- FIXME: Encode --></user_form></xmp>
+                </td><td>True Positive</td>
+            </tr>
+            <caption>Examples</caption>
+        </table>
+
+        <br>
+        <table border="1"  width = "500">
+            <caption>Default Values</caption>
+            <tr><th>Risk</th><td>Info</td></tr>
+            <tr><th>Confidence</th><td>Medium</td></tr>
+            <tr><th>CWE ID</th><td>200: Information Exposure</td></tr>
+            <tr><th>WASC ID</th><td>13: Info Leakage</td></tr>
+        </table>
     </BODY>
 </HTML>
