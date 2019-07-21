@@ -36,6 +36,7 @@ zapAddOn {
 }
 
 dependencies {
+    compile("com.google.guava:guava:28.0-jre")
     compileOnly(parent!!.childProjects.get("fuzz")!!)
 
     testImplementation(project(":testutils"))
