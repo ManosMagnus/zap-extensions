@@ -81,6 +81,7 @@ import org.zaproxy.zap.extension.script.ExtensionScript;
 import org.zaproxy.zap.extension.script.ScriptType;
 import org.zaproxy.zap.extension.script.ScriptWrapper;
 import org.zaproxy.zap.extension.websocket.alerts.AlertManager;
+import org.zaproxy.zap.extension.websocket.analyzer.WebSocketManagerAnalyzer;
 import org.zaproxy.zap.extension.websocket.brk.PopupMenuAddBreakWebSocket;
 import org.zaproxy.zap.extension.websocket.brk.WebSocketBreakpointMessageHandler;
 import org.zaproxy.zap.extension.websocket.brk.WebSocketBreakpointsUiManagerInterface;
@@ -459,7 +460,9 @@ public class ExtensionWebSocket extends ExtensionAdaptor
             webSocketPassiveScannerManager.startThread();
         }
 
-        webSocketTreeMap = new WebSocketTreeMap(new WebSocketSimpleNodeNamer());
+        webSocketTreeMap =
+                new WebSocketTreeMap(
+                        new WebSocketSimpleNodeNamer(), new WebSocketManagerAnalyzer());
         addAllChannelObserver(webSocketTreeMap);
     }
 
