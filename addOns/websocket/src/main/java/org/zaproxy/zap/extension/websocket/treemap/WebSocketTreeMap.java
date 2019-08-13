@@ -24,6 +24,7 @@ import org.zaproxy.zap.extension.websocket.WebSocketMessage;
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
 import org.zaproxy.zap.extension.websocket.WebSocketObserver;
 import org.zaproxy.zap.extension.websocket.WebSocketProxy;
+import org.zaproxy.zap.extension.websocket.analyzer.WebSocketManagerAnalyzer;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.contents.WebSocketContent;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.factories.NodeFactory;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.factories.SimpleNodeFactory;
@@ -38,8 +39,11 @@ public class WebSocketTreeMap implements WebSocketObserver {
 
     private NodeFactory nodeFactory;
 
-    public WebSocketTreeMap(WebSocketNodeNamer namer) {
+    WebSocketManagerAnalyzer managerAnalyzer;
+
+    public WebSocketTreeMap(WebSocketNodeNamer namer, WebSocketManagerAnalyzer managerAnalyzer) {
         nodeFactory = new SimpleNodeFactory(namer);
+        this.managerAnalyzer = managerAnalyzer;
     }
 
     /** Adding a WebSocket Message in the Tree Map. */
@@ -68,7 +72,7 @@ public class WebSocketTreeMap implements WebSocketObserver {
 
     @Override
     public boolean onMessageFrame(int channelId, WebSocketMessage message) {
-        addMessage(message.getDTO());
+        managerAnalyzer.addMessageContent(addMessage(message.getDTO()).getContent());
         return true;
     }
 

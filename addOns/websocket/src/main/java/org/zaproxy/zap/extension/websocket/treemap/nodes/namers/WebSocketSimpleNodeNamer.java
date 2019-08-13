@@ -33,10 +33,15 @@ public class WebSocketSimpleNodeNamer implements WebSocketNodeNamer {
     @Override
     public String getName(MessageContent messageContent) {
         String name;
-        try {
-            name = messageContent.getMessage().getReadablePayload();
-        } catch (InvalidUtf8Exception e) {
-            name = Constant.messages.getString("websocket.payload.unreadable_binary");
+        if (messageContent.getPayloadStructure() == null) {
+            try {
+                name = messageContent.getMessage().getReadablePayload();
+            } catch (InvalidUtf8Exception e) {
+                name = Constant.messages.getString("websocket.payload.unreadable_binary");
+            }
+
+        } else {
+            name = messageContent.getPayloadStructure().getName();
         }
         return !name.isEmpty() ? name : Constant.messages.getString("websocket.node.empty_payload");
     }

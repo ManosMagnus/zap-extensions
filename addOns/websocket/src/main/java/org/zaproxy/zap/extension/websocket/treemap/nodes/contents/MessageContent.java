@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
+import org.zaproxy.zap.extension.websocket.analyzer.structure.PayloadStructure;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.namers.WebSocketNodeNamer;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.TreeNode;
 import org.zaproxy.zap.extension.websocket.utility.InvalidUtf8Exception;
@@ -34,6 +35,8 @@ import org.zaproxy.zap.extension.websocket.utility.InvalidUtf8Exception;
 public class MessageContent extends WebSocketContent {
 
     private WebSocketMessageDTO webSocketMessage;
+
+    private PayloadStructure payloadStructure;
 
     public MessageContent(WebSocketNodeNamer namer, WebSocketMessageDTO message) {
         this.webSocketMessage = message;
@@ -112,5 +115,15 @@ public class MessageContent extends WebSocketContent {
         messageMap.computeIfAbsent(hostNode, k -> new ArrayList<>()).add(getMessage());
 
         return messageMap;
+    }
+
+    @Override
+    public void setPayloadStructure(PayloadStructure payloadStructure) {
+        this.payloadStructure = payloadStructure;
+    }
+
+    @Override
+    public PayloadStructure getPayloadStructure() {
+        return payloadStructure;
     }
 }

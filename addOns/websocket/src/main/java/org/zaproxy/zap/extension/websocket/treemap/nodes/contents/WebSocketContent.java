@@ -22,6 +22,7 @@ package org.zaproxy.zap.extension.websocket.treemap.nodes.contents;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.zaproxy.zap.extension.websocket.analyzer.structure.PayloadStructure;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.TreeNode;
 
 /**
@@ -94,5 +95,13 @@ public abstract class WebSocketContent extends Object
             return null;
         }
         return hostNodes.get(0);
+    }
+
+    public void setPayloadStructure(PayloadStructure payloadStructure) {
+        // Do nothing
+    }
+
+    public PayloadStructure getPayloadStructure() {
+        return null;
     }
 }
