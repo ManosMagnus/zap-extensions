@@ -25,11 +25,9 @@ import org.zaproxy.zap.extension.websocket.WebSocketObserver;
 import org.zaproxy.zap.extension.websocket.WebSocketProxy;
 import org.zaproxy.zap.extension.websocket.db.WebSocketStorage;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.factories.NodeFactory;
-import org.zaproxy.zap.extension.websocket.treemap.nodes.factories.SimpleNodeFactory;
-import org.zaproxy.zap.extension.websocket.treemap.nodes.namers.WebSocketNodeNamer;
-import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.TreeNode;
+import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeInterface;
 
-public class WebSocketTreeMap implements WebSocketObserver {
+public class WebSocketTreeMap implements TreeMap, WebSocketObserver {
 
     private static final Logger LOGGER = Logger.getLogger(WebSocketTreeMap.class);
 
@@ -41,14 +39,19 @@ public class WebSocketTreeMap implements WebSocketObserver {
     /** True if server proxies should be ignored */
     private boolean isServerModeIgnored = true;
 
-    public WebSocketTreeMap(WebSocketNodeNamer namer) {
-        nodeFactory = new SimpleNodeFactory(namer);
+    public WebSocketTreeMap(NodeFactory nodeFactory) {
+        this.nodeFactory = nodeFactory;
+    }
+
+    @Override
+    public WebSocketObserver getWebSocketObserver() {
+        return this;
     }
 
     /** Adding a WebSocket Message in the Tree Map. */
-    private synchronized TreeNode addMessage(WebSocketMessage webSocketMessage) {
+    public synchronized WebSocketNodeInterface addMessage(WebSocketMessage webSocketMessage) {
 
-        TreeNode result = null;
+        WebSocketNodeInterface result = null;
 
         if (!shouldIgnoreMode(webSocketMessage.getProxyMode())) {
 
@@ -68,9 +71,9 @@ public class WebSocketTreeMap implements WebSocketObserver {
      * @param proxy the Connecting proxy.
      * @return the new Host Node or the existing one.
      */
-    private synchronized TreeNode addConnection(WebSocketProxy proxy) {
+    public synchronized WebSocketNodeInterface addConnection(WebSocketProxy proxy) {
 
-        TreeNode result = null;
+        WebSocketNodeInterface result = null;
 
         if (!shouldIgnoreMode(proxy.getMode())) {
 
@@ -87,6 +90,11 @@ public class WebSocketTreeMap implements WebSocketObserver {
         }
 
         return result;
+    }
+
+    @Override
+    public WebSocketNodeInterface getRootNode() {
+        return nodeFactory.getRoot();
     }
 
     private boolean shouldIgnoreMode(WebSocketProxy.Mode mode) {
