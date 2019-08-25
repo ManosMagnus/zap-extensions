@@ -91,7 +91,14 @@ import org.zaproxy.zap.extension.websocket.manualsend.ManualWebSocketSendEditorD
 import org.zaproxy.zap.extension.websocket.manualsend.WebSocketPanelSender;
 import org.zaproxy.zap.extension.websocket.pscan.WebSocketPassiveScannerManager;
 import org.zaproxy.zap.extension.websocket.pscan.scripts.ScriptsWebSocketPassiveScanner;
+import org.zaproxy.zap.extension.websocket.treemap.TreeMap;
 import org.zaproxy.zap.extension.websocket.treemap.WebSocketTreeMap;
+import org.zaproxy.zap.extension.websocket.treemap.nodes.factories.SimpleNodeFactory;
+import org.zaproxy.zap.extension.websocket.treemap.nodes.namers.WebSocketSimpleNodeNamer;
+import org.zaproxy.zap.extension.websocket.treemap.ui.SimpeNodeFactoryUI;
+import org.zaproxy.zap.extension.websocket.treemap.ui.WebSocketMapPanel;
+import org.zaproxy.zap.extension.websocket.treemap.ui.WebSocketTreeMapHelperUI;
+import org.zaproxy.zap.extension.websocket.treemap.ui.WebSocketTreeMapModel;
 import org.zaproxy.zap.extension.websocket.ui.ExcludeFromWebSocketsMenuItem;
 import org.zaproxy.zap.extension.websocket.ui.OptionsParamWebSocket;
 import org.zaproxy.zap.extension.websocket.ui.OptionsWebSocketPanel;
@@ -235,7 +242,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor
 
     private ExtensionScript extensionScript = null;
 
-    private WebSocketTreeMap webSocketTreeMap = null;
+    private TreeMap webSocketTreeMap = null;
 
     public ExtensionWebSocket() {
         super(NAME);
@@ -335,6 +342,12 @@ public class ExtensionWebSocket extends ExtensionAdaptor
         }
 
         if (getView() != null) {
+
+            this.webSocketMapUI = getWebSocketMapUI(new WebSocketTreeMap(
+                    new SimpeNodeFactoryUI(new SimpleNodeFactory(
+                            new WebSocketSimpleNodeNamer()))));
+            addAllChannelObserver(webSocketMapUI.getWebSocketObserver());
+
             ExtensionLoader extLoader = Control.getSingleton().getExtensionLoader();
             ExtensionHookView hookView = extensionHook.getHookView();
             ExtensionHookMenu hookMenu = extensionHook.getHookMenu();
@@ -410,6 +423,9 @@ public class ExtensionWebSocket extends ExtensionAdaptor
                     httpSendEditor.addPersistentConnectionListener(this);
                 }
             }
+            //WebSocket Map Tree
+            hookView.addSelectPanel(getWebSocketMapPanel());
+
         }
         // setup sender script interface
         this.extensionScript =
@@ -457,9 +473,26 @@ public class ExtensionWebSocket extends ExtensionAdaptor
             webSocketPassiveScannerManager.setAllEnable(true);
             webSocketPassiveScannerManager.startThread();
         }
+    }
 
-        //        webSocketTreeMap = new WebSocketTreeMap(new WebSocketSimpleNodeNamer());
-        //        addAllChannelObserver(webSocketTreeMap);
+    private WebSocketTreeMapModel webSocketMapUI = null;
+
+    private WebSocketMapPanel webSocketMapPanel = null;
+
+    public WebSocketMapPanel getWebSocketMapPanel() {
+        if(webSocketMapPanel == null){
+            webSocketMapPanel = new WebSocketMapPanel(this,
+                    webSocketMapUI,
+                    new WebSocketTreeMapHelperUI());
+        }
+        return webSocketMapPanel;
+    }
+
+    private WebSocketTreeMapModel getWebSocketMapUI(WebSocketTreeMap webSocketTreeMap){
+        if(webSocketMapUI == null){
+            webSocketMapUI = new WebSocketTreeMapModel(webSocketTreeMap);
+        }
+        return webSocketMapUI;
     }
 
     @Override
