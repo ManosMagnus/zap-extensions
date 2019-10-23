@@ -95,7 +95,6 @@ import org.zaproxy.zap.extension.websocket.treemap.TreeMap;
 import org.zaproxy.zap.extension.websocket.treemap.WebSocketTreeMap;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.factories.SimpleNodeFactory;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.namers.WebSocketSimpleNodeNamer;
-import org.zaproxy.zap.extension.websocket.treemap.ui.SimpeNodeFactoryUI;
 import org.zaproxy.zap.extension.websocket.treemap.ui.WebSocketMapPanel;
 import org.zaproxy.zap.extension.websocket.treemap.ui.WebSocketTreeMapHelperUI;
 import org.zaproxy.zap.extension.websocket.treemap.ui.WebSocketTreeMapModel;
@@ -343,9 +342,10 @@ public class ExtensionWebSocket extends ExtensionAdaptor
 
         if (getView() != null) {
 
-            this.webSocketMapUI = getWebSocketMapUI(new WebSocketTreeMap(
-                    new SimpeNodeFactoryUI(new SimpleNodeFactory(
-                            new WebSocketSimpleNodeNamer()))));
+            this.webSocketMapUI =
+                    getWebSocketMapUI(
+                            new WebSocketTreeMap(
+                                    new SimpleNodeFactory(new WebSocketSimpleNodeNamer())));
             addAllChannelObserver(webSocketMapUI.getWebSocketObserver());
 
             ExtensionLoader extLoader = Control.getSingleton().getExtensionLoader();
@@ -423,9 +423,8 @@ public class ExtensionWebSocket extends ExtensionAdaptor
                     httpSendEditor.addPersistentConnectionListener(this);
                 }
             }
-            //WebSocket Map Tree
+            // WebSocket Map Tree
             hookView.addSelectPanel(getWebSocketMapPanel());
-
         }
         // setup sender script interface
         this.extensionScript =
@@ -480,16 +479,15 @@ public class ExtensionWebSocket extends ExtensionAdaptor
     private WebSocketMapPanel webSocketMapPanel = null;
 
     public WebSocketMapPanel getWebSocketMapPanel() {
-        if(webSocketMapPanel == null){
-            webSocketMapPanel = new WebSocketMapPanel(this,
-                    webSocketMapUI,
-                    new WebSocketTreeMapHelperUI());
+        if (webSocketMapPanel == null) {
+            webSocketMapPanel =
+                    new WebSocketMapPanel(this, webSocketMapUI, new WebSocketTreeMapHelperUI());
         }
         return webSocketMapPanel;
     }
 
-    private WebSocketTreeMapModel getWebSocketMapUI(WebSocketTreeMap webSocketTreeMap){
-        if(webSocketMapUI == null){
+    private WebSocketTreeMapModel getWebSocketMapUI(WebSocketTreeMap webSocketTreeMap) {
+        if (webSocketMapUI == null) {
             webSocketMapUI = new WebSocketTreeMapModel(webSocketTreeMap);
         }
         return webSocketMapUI;

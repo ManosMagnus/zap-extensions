@@ -26,7 +26,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.contents.NodeContent;
-import org.zaproxy.zap.extension.websocket.treemap.ui.WebSocketTreeCellRenderer;
 
 public interface WebSocketNodeInterface extends Comparable<WebSocketNodeInterface> {
 
@@ -81,6 +80,4 @@ public interface WebSocketNodeInterface extends Comparable<WebSocketNodeInterfac
 
     HashMap<WebSocketNodeInterface, List<WebSocketMessageDTO>> getMessagesPerHost(
             HashMap<WebSocketNodeInterface, List<WebSocketMessageDTO>> messageMap);
-
-    WebSocketTreeCellRenderer draw(WebSocketTreeCellRenderer treeCellRenderer);
 }

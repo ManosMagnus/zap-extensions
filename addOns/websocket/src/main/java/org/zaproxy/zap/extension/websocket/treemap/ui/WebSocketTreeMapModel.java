@@ -19,9 +19,6 @@
  */
 package org.zaproxy.zap.extension.websocket.treemap.ui;
 
-import javax.swing.event.TreeModelListener;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import org.zaproxy.zap.extension.websocket.WebSocketMessage;
 import org.zaproxy.zap.extension.websocket.WebSocketObserver;
@@ -30,21 +27,30 @@ import org.zaproxy.zap.extension.websocket.treemap.TreeMap;
 import org.zaproxy.zap.extension.websocket.treemap.WebSocketTreeMap;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeInterface;
 
-public class WebSocketTreeMapModel implements TreeMap, TreeModel {
+public class WebSocketTreeMapModel extends WebSocketTreeModelAbstract implements TreeMap{
 
-    private WebSocketTreeMap webSocketTreeMap;
     private WebSocketTreeMapObserver webSocketTreeMapObserver = null;
+    private WebSocketTreeMap webSocketTreeMap;
 
     public WebSocketTreeMapModel(WebSocketTreeMap webSocketTreeMap) {
+        super();
         this.webSocketTreeMap = webSocketTreeMap;
     }
 
+    @Override
     public WebSocketNodeInterface addMessage(WebSocketMessage message) {
-        return webSocketTreeMap.addMessage(message);
+        WebSocketNodeInterface node = webSocketTreeMap.addMessage(message);
+
     }
 
+    @Override
     public WebSocketNodeInterface addConnection(WebSocketProxy proxy) {
         return webSocketTreeMap.addConnection(proxy);
+    }
+
+    @Override
+    public WebSocketNodeInterface getRootNode() {
+        return webSocketTreeMap.getRootNode();
     }
 
     @Override
@@ -58,11 +64,6 @@ public class WebSocketTreeMapModel implements TreeMap, TreeModel {
     @Override
     public Object getRoot() {
         return this.getRootNode();
-    }
-
-    @Override
-    public WebSocketNodeInterface getRootNode() {
-        return webSocketTreeMap.getRootNode();
     }
 
     @Override
@@ -81,18 +82,12 @@ public class WebSocketTreeMapModel implements TreeMap, TreeModel {
     }
 
     @Override
-    public void valueForPathChanged(TreePath treePath, Object o) {}
-
-    @Override
     public int getIndexOfChild(Object parent, Object child) {
         return ((WebSocketNodeInterface) child).getIndex();
     }
 
     @Override
-    public void addTreeModelListener(TreeModelListener treeModelListener) {}
-
-    @Override
-    public void removeTreeModelListener(TreeModelListener treeModelListener) {}
+    public void valueForPathChanged(TreePath treePath, Object o) {}
 
     private class WebSocketTreeMapObserver implements WebSocketObserver {
 

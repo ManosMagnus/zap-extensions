@@ -29,7 +29,6 @@ import java.util.function.Function;
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.WebSocketNode;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.contents.NodeContent;
-import org.zaproxy.zap.extension.websocket.treemap.ui.WebSocketTreeCellRenderer;
 
 public abstract class WebSocketNodeAbstract implements WebSocketNodeInterface {
 
@@ -247,9 +246,4 @@ public abstract class WebSocketNodeAbstract implements WebSocketNodeInterface {
 
     public abstract HashMap<WebSocketNodeInterface, List<WebSocketMessageDTO>> getMessagesPerHost(
             HashMap<WebSocketNodeInterface, List<WebSocketMessageDTO>> messageMap);
-
-    @Override
-    public WebSocketTreeCellRenderer draw(WebSocketTreeCellRenderer treeCellRenderer) {
-        return treeCellRenderer;
-    }
 }

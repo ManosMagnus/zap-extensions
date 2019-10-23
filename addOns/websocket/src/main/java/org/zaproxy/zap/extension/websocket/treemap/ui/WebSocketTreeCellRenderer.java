@@ -20,14 +20,36 @@
 package org.zaproxy.zap.extension.websocket.treemap.ui;
 
 import java.awt.Component;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeInterface;
+import org.zaproxy.zap.utils.DisplayUtils;
+import org.zaproxy.zap.view.OverlayIcon;
 
 public class WebSocketTreeCellRenderer extends DefaultTreeCellRenderer {
 
     private static final long serialVersionUID = 6958752713770131906L;
+
+    public static final ImageIcon INCOMING_MESSAGE_ICON =
+            new ImageIcon(
+                    WebSocketTreeCellRenderer.class.getResource("/resource/icon/105_gray.png"));
+    public static final ImageIcon OUTGOING_MESSAGE_ICON =
+            new ImageIcon(
+                    WebSocketTreeCellRenderer.class.getResource("/resource/icon/106_gray.png"));
+
+    public static final ImageIcon FOLDER_ROOT_ICON =
+            new ImageIcon(WebSocketTreeCellRenderer.class.getResource("/resource/icon/16/094.png"));
+    public static final ImageIcon FOLDER_CONNECTED_CHANNEL_ICON =
+            new ImageIcon(
+                    WebSocketTreeCellRenderer.class.getResource(
+                            "/resource/icon/fugue/plug-connect.png"));
+    public static final ImageIcon FOLDER_DISCONNECTED_CHANNEL_ICON =
+            new ImageIcon(
+                    WebSocketTreeCellRenderer.class.getResource(
+                            "/resource/icon/fugue/plug-disconnect.png"));
 
     private WebSocketTreeMapHelperUI helperUI;
     private JPanel panel;
@@ -35,7 +57,7 @@ public class WebSocketTreeCellRenderer extends DefaultTreeCellRenderer {
     public WebSocketTreeCellRenderer(WebSocketTreeMapHelperUI helper) {
         this.helperUI = helper;
         panel = helperUI.getTreeMapCellPanel();
-        helper.getTreeMapCellPanel().setOpaque(false);
+        panel.setOpaque(false);
     }
 
     @Override
@@ -47,24 +69,55 @@ public class WebSocketTreeCellRenderer extends DefaultTreeCellRenderer {
             boolean leaf,
             int row,
             boolean hasFocus) {
-        super.getTreeCellRendererComponent(
-                jTree, value, selected, expanded, leaf, row, hasFocus);
-        jTree.setVisible(true);
-        panel.removeAll();
 
+        panel.removeAll();
         WebSocketNodeInterface node = (WebSocketNodeInterface) value;
+
         if (node != null) {
             super.setPreferredSize(null);
             super.getTreeCellRendererComponent(
                     jTree, value, selected, expanded, leaf, row, hasFocus);
 
-            panel.add(node.draw(this));
-            return getPanel();
+            if (node.isRoot()) {
+                panel.add(wrap(FOLDER_ROOT_ICON));
+            } else {
+
+                OverlayIcon overlayIcon;
+
+                if (!node.isLeaf()) { // Host Folder Node
+                    // TODO: Add node.isConnected() in order to add the appropriate icon
+                    overlayIcon = new OverlayIcon(FOLDER_CONNECTED_CHANNEL_ICON);
+                } else { // Leaf node
+                    if(node.getContent() != null && node.getContent().getMessage() != null){
+                        if (node.getContent().getMessage().isOutgoing) {
+                            overlayIcon = new OverlayIcon(OUTGOING_MESSAGE_ICON);
+                        } else {
+                            overlayIcon = new OverlayIcon(INCOMING_MESSAGE_ICON);
+                        }
+                    }else {
+                        overlayIcon = new OverlayIcon(INCOMING_MESSAGE_ICON);
+                    }
+
+                }
+
+                panel.add(wrap(DisplayUtils.getScaledIcon(overlayIcon)));
+            }
+            setText(node.getName());
+            setIcon(null);
+            panel.add(this);
+            return panel;
         }
         return this;
     }
 
     public JPanel getPanel() {
         return panel;
+    }
+
+    private JLabel wrap(ImageIcon icon) {
+        JLabel label = new JLabel(icon);
+        label.setOpaque(false);
+        label.putClientProperty("html.disable", Boolean.TRUE);
+        return label;
     }
 }

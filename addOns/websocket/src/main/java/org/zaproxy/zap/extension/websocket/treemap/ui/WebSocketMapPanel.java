@@ -23,10 +23,13 @@ import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.Enumeration;
 import javax.swing.ImageIcon;
 import javax.swing.JTree;
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
@@ -35,7 +38,6 @@ import org.parosproxy.paros.Constant;
 import org.parosproxy.paros.extension.AbstractPanel;
 import org.parosproxy.paros.model.Model;
 import org.zaproxy.zap.extension.websocket.ExtensionWebSocket;
-import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeAbstract;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeInterface;
 import org.zaproxy.zap.view.LayoutHelper;
 
@@ -132,6 +134,33 @@ public class WebSocketMapPanel extends AbstractPanel {
             // ZAP: Add custom tree cell renderer.
             TreeCellRenderer renderer = new WebSocketTreeCellRenderer(helperUI);
             treeMap.setCellRenderer(renderer);
+
+            treeMapModel.addTreeModelListener(new TreeModelListener() {
+                @Override
+                public void treeNodesChanged(TreeModelEvent treeModelEvent) {
+
+                }
+
+                @Override
+                public void treeNodesInserted(TreeModelEvent treeModelEvent) {
+
+                }
+
+                @Override
+                public void treeNodesRemoved(TreeModelEvent treeModelEvent) {
+
+                }
+
+                @Override
+                public void treeStructureChanged(TreeModelEvent treeModelEvent) {
+                    Enumeration listeners = vector.elements();
+                    while ( listeners.hasMoreElements() ) {
+                        TreeModelListener listener = (TreeModelListener)listeners.nextElement();
+                        listener.treeStructureChanged( e );
+                    }
+
+                }
+            });
         }
         return treeMap;
     }
