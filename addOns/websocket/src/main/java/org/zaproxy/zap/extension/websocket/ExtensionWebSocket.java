@@ -481,7 +481,7 @@ public class ExtensionWebSocket extends ExtensionAdaptor
     public WebSocketMapPanel getWebSocketMapPanel() {
         if (webSocketMapPanel == null) {
             webSocketMapPanel =
-                    new WebSocketMapPanel(this, webSocketMapUI, new WebSocketTreeMapHelperUI());
+                    new WebSocketMapPanel(webSocketMapUI, new WebSocketTreeMapHelperUI());
         }
         return webSocketMapPanel;
     }

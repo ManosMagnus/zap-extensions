@@ -23,13 +23,10 @@ import java.awt.EventQueue;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.util.Enumeration;
 import javax.swing.ImageIcon;
 import javax.swing.JTree;
 import javax.swing.LookAndFeel;
 import javax.swing.UIManager;
-import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
@@ -37,7 +34,6 @@ import org.apache.log4j.Logger;
 import org.parosproxy.paros.Constant;
 import org.parosproxy.paros.extension.AbstractPanel;
 import org.parosproxy.paros.model.Model;
-import org.zaproxy.zap.extension.websocket.ExtensionWebSocket;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeInterface;
 import org.zaproxy.zap.view.LayoutHelper;
 
@@ -45,23 +41,22 @@ public class WebSocketMapPanel extends AbstractPanel {
 
     private static final long serialVersionUID = -5534551524380114578L;
 
-    public static final ImageIcon DISCONNECT_ICON =
+    public static final ImageIcon DISCONNECTED_ICON =
             new ImageIcon(
                     WebSocketMapPanel.class.getResource(
                             "/resource/icon/fugue/plug-disconnect.png"));
-    public static final ImageIcon CONNECT_ICON =
+    public static final ImageIcon CONNECTED_ICON =
             new ImageIcon(
                     WebSocketMapPanel.class.getResource("/resource/icon/fugue/plug-connect.png"));
-    public static final ImageIcon DISCONNECT_TARGET_ICON =
-            new ImageIcon(
-                    WebSocketMapPanel.class.getResource(
-                            "/resource/icon/fugue/plug-disconnect-target.png"));
-    public static final ImageIcon CONNECT_TARGET_ICON =
-            new ImageIcon(
-                    WebSocketMapPanel.class.getResource(
-                            "/resource/icon/fugue/plug-connect-target.png"));
 
-    private ExtensionWebSocket extensionWebSocket;
+    //    public static final ImageIcon DISCONNECT_TARGET_ICON =
+    //            new ImageIcon(
+    //                    WebSocketMapPanel.class.getResource(
+    //                            "/resource/icon/fugue/plug-disconnect-target.png"));
+    //    public static final ImageIcon CONNECT_TARGET_ICON =
+    //            new ImageIcon(
+    //                    WebSocketMapPanel.class.getResource(
+    //                            "/resource/icon/fugue/plug-connect-target.png"));
 
     private WebSocketTreeMapModel treeMapModel;
 
@@ -73,11 +68,8 @@ public class WebSocketMapPanel extends AbstractPanel {
 
     /** Constructor which initialize the Panel */
     public WebSocketMapPanel(
-            ExtensionWebSocket extensionWebSocket,
-            WebSocketTreeMapModel treeMapModel,
-            WebSocketTreeMapHelperUI helperUI) {
+            WebSocketTreeMapModel treeMapModel, WebSocketTreeMapHelperUI helperUI) {
         super();
-        this.extensionWebSocket = extensionWebSocket;
         this.treeMapModel = treeMapModel;
         this.helperUI = helperUI;
 
@@ -85,26 +77,27 @@ public class WebSocketMapPanel extends AbstractPanel {
     }
 
     private void initialize() {
-        this.setHideable(true);
-        this.setIcon(DISCONNECT_ICON);
-        this.setName(Constant.messages.getString("websocket.treemap.title"));
+        super.setHideable(true);
+        super.setIcon(DISCONNECTED_ICON);
+        super.setName(Constant.messages.getString("websocket.treemap.title"));
         //		this.setDefaultAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S,
         // Toolkit.getDefaultToolkit().getMenuShortcutKeyMask() | KeyEvent.SHIFT_DOWN_MASK, false));
 
         if (Model.getSingleton().getOptionsParam().getViewParam().getWmUiHandlingOption() == 0) {
-            this.setSize(300, 200);
+            super.setSize(300, 200);
         }
 
-        this.setLayout(new GridBagLayout());
-        this.add(
-                helperUI.getPanelToolbar(),
-                LayoutHelper.getGBC(0, 0, 1, 0, new Insets(2, 2, 2, 2)));
-        this.add(
+        super.setLayout(new GridBagLayout());
+        //        this.add(
+        //                helperUI.getPanelToolbar(),
+        //                LayoutHelper.getGBC(0, 0, 1, 0, new Insets(2, 2, 2, 2)));
+        super.add(
                 helperUI.getWebSocketTreePanel(getTreeSite()),
                 LayoutHelper.getGBC(
                         0, 1, 1, 1.0, 1.0, GridBagConstraints.BOTH, new Insets(2, 2, 2, 2)));
 
         expandRoot();
+        getTreeSite().addTreeSelectionListener();
     }
 
     /**
@@ -135,32 +128,7 @@ public class WebSocketMapPanel extends AbstractPanel {
             TreeCellRenderer renderer = new WebSocketTreeCellRenderer(helperUI);
             treeMap.setCellRenderer(renderer);
 
-            treeMapModel.addTreeModelListener(new TreeModelListener() {
-                @Override
-                public void treeNodesChanged(TreeModelEvent treeModelEvent) {
-
-                }
-
-                @Override
-                public void treeNodesInserted(TreeModelEvent treeModelEvent) {
-
-                }
-
-                @Override
-                public void treeNodesRemoved(TreeModelEvent treeModelEvent) {
-
-                }
-
-                @Override
-                public void treeStructureChanged(TreeModelEvent treeModelEvent) {
-                    Enumeration listeners = vector.elements();
-                    while ( listeners.hasMoreElements() ) {
-                        TreeModelListener listener = (TreeModelListener)listeners.nextElement();
-                        listener.treeStructureChanged( e );
-                    }
-
-                }
-            });
+            //            treeMapModel.addTreeModelListener(treeMap);
         }
         return treeMap;
     }

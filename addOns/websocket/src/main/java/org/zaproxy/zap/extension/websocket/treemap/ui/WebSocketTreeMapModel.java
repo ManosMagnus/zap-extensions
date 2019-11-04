@@ -19,15 +19,19 @@
  */
 package org.zaproxy.zap.extension.websocket.treemap.ui;
 
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.event.TreeModelEvent;
 import javax.swing.tree.TreePath;
 import org.zaproxy.zap.extension.websocket.WebSocketMessage;
 import org.zaproxy.zap.extension.websocket.WebSocketObserver;
 import org.zaproxy.zap.extension.websocket.WebSocketProxy;
 import org.zaproxy.zap.extension.websocket.treemap.TreeMap;
 import org.zaproxy.zap.extension.websocket.treemap.WebSocketTreeMap;
+import org.zaproxy.zap.extension.websocket.treemap.nodes.WebSocketNodeWrapper;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeInterface;
 
-public class WebSocketTreeMapModel extends WebSocketTreeModelAbstract implements TreeMap{
+public class WebSocketTreeMapModel extends WebSocketTreeModelAbstract implements TreeMap {
 
     private WebSocketTreeMapObserver webSocketTreeMapObserver = null;
     private WebSocketTreeMap webSocketTreeMap;
@@ -38,14 +42,52 @@ public class WebSocketTreeMapModel extends WebSocketTreeModelAbstract implements
     }
 
     @Override
-    public WebSocketNodeInterface addMessage(WebSocketMessage message) {
-        WebSocketNodeInterface node = webSocketTreeMap.addMessage(message);
+    public WebSocketNodeWrapper addMessage(WebSocketMessage message) {
 
+        WebSocketNodeWrapper nodeWrapper = webSocketTreeMap.addMessage(message);
+
+        if (nodeWrapper.getState() == WebSocketNodeWrapper.State.INSERTED) {
+            fireTreeNodesInserted(getTreeModelEvent(nodeWrapper.getNode()));
+        } else if (nodeWrapper.getState() == WebSocketNodeWrapper.State.CHANGED) {
+            fireTreeNodesChanged(getTreeModelEvent(nodeWrapper.getNode()));
+        }
+
+        return nodeWrapper;
     }
 
     @Override
-    public WebSocketNodeInterface addConnection(WebSocketProxy proxy) {
-        return webSocketTreeMap.addConnection(proxy);
+    public WebSocketNodeWrapper addConnection(WebSocketProxy proxy) {
+
+        WebSocketNodeWrapper nodeWrapper = webSocketTreeMap.addConnection(proxy);
+
+        if (nodeWrapper.getState() == WebSocketNodeWrapper.State.INSERTED) {
+            fireTreeNodesInserted(getTreeModelEvent(nodeWrapper.getNode()));
+        }
+
+        return nodeWrapper;
+    }
+
+    private TreeModelEvent getTreeModelEvent(WebSocketNodeInterface node) {
+
+        return new TreeModelEvent(
+                this,
+                getPath(node),
+                new int[] {node.getIndex()},
+                new WebSocketNodeInterface[] {node});
+    }
+
+    private Object[] getPath(WebSocketNodeInterface node) {
+
+        List<WebSocketNodeInterface> path = new ArrayList<>();
+
+        WebSocketNodeInterface currentNode = node.getParent();
+
+        do {
+            path.add(0, currentNode);
+            currentNode = currentNode.getParent();
+        } while (currentNode != null);
+
+        return path.toArray();
     }
 
     @Override

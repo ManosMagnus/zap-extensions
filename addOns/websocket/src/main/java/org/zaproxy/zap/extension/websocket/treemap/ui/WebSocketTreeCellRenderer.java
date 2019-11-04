@@ -84,20 +84,19 @@ public class WebSocketTreeCellRenderer extends DefaultTreeCellRenderer {
 
                 OverlayIcon overlayIcon;
 
-                if (!node.isLeaf()) { // Host Folder Node
+                if (node.getParent().isRoot()) { // Host Folder Node
                     // TODO: Add node.isConnected() in order to add the appropriate icon
                     overlayIcon = new OverlayIcon(FOLDER_CONNECTED_CHANNEL_ICON);
                 } else { // Leaf node
-                    if(node.getContent() != null && node.getContent().getMessage() != null){
+                    if (node.getContent() != null && node.getContent().getMessage() != null) {
                         if (node.getContent().getMessage().isOutgoing) {
                             overlayIcon = new OverlayIcon(OUTGOING_MESSAGE_ICON);
                         } else {
                             overlayIcon = new OverlayIcon(INCOMING_MESSAGE_ICON);
                         }
-                    }else {
+                    } else {
                         overlayIcon = new OverlayIcon(INCOMING_MESSAGE_ICON);
                     }
-
                 }
 
                 panel.add(wrap(DisplayUtils.getScaledIcon(overlayIcon)));
