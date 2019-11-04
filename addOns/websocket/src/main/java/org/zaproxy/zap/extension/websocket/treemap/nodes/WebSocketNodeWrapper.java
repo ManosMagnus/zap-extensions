@@ -17,21 +17,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.zaproxy.zap.extension.websocket.treemap;
+package org.zaproxy.zap.extension.websocket.treemap.nodes;
 
-import org.zaproxy.zap.extension.websocket.WebSocketMessage;
-import org.zaproxy.zap.extension.websocket.WebSocketObserver;
-import org.zaproxy.zap.extension.websocket.WebSocketProxy;
-import org.zaproxy.zap.extension.websocket.treemap.nodes.WebSocketNodeWrapper;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeInterface;
 
-public interface TreeMap {
+public class WebSocketNodeWrapper {
 
-    WebSocketObserver getWebSocketObserver();
+    public enum State {
+        INSERTED,
+        DELETED,
+        CHANGED,
+        UNCHANGED
+    }
 
-    WebSocketNodeWrapper addMessage(WebSocketMessage message);
+    private WebSocketNodeInterface node;
+    private State state;
 
-    WebSocketNodeWrapper addConnection(WebSocketProxy proxy);
+    public WebSocketNodeWrapper(WebSocketNodeInterface node, State state) {
+        this.node = node;
+        this.state = state;
+    }
 
-    WebSocketNodeInterface getRootNode();
+    public WebSocketNodeInterface getNode() {
+        return node;
+    }
+
+    public State getState() {
+        return state;
+    }
 }

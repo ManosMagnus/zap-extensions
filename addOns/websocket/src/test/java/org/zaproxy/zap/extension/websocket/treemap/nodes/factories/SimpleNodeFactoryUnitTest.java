@@ -62,7 +62,7 @@ public class SimpleNodeFactoryUnitTest extends WebSocketAddonTestUtils {
         WebSocketChannelDTO channel = getWebSocketChannelDTO(1, getServerUrl().toString());
 
         // When
-        WebSocketNodeInterface hostNode = nodeFactory.getHostTreeNode(channel);
+        WebSocketNodeInterface hostNode = nodeFactory.getHostTreeNode(channel).getNode();
 
         // Then
         Assert.assertEquals(NodesUtilities.getHostName(channel), hostNode.getHost());
@@ -77,10 +77,10 @@ public class SimpleNodeFactoryUnitTest extends WebSocketAddonTestUtils {
         WebSocketChannelDTO channel4_3 = getWebSocketChannelDTO(4, "hostname_3");
 
         // When
-        WebSocketNodeInterface hostNode_1_1 = nodeFactory.getHostTreeNode(channel1_1);
-        WebSocketNodeInterface hostNode_2_1 = nodeFactory.getHostTreeNode(channel2_1);
-        WebSocketNodeInterface hostNode_3_2 = nodeFactory.getHostTreeNode(channel3_2);
-        WebSocketNodeInterface hostNode_4_3 = nodeFactory.getHostTreeNode(channel4_3);
+        WebSocketNodeInterface hostNode_1_1 = nodeFactory.getHostTreeNode(channel1_1).getNode();
+        WebSocketNodeInterface hostNode_2_1 = nodeFactory.getHostTreeNode(channel2_1).getNode();
+        WebSocketNodeInterface hostNode_3_2 = nodeFactory.getHostTreeNode(channel3_2).getNode();
+        WebSocketNodeInterface hostNode_4_3 = nodeFactory.getHostTreeNode(channel4_3).getNode();
 
         // Then
         Assert.assertEquals(hostNode_1_1, hostNode_2_1);
@@ -96,8 +96,8 @@ public class SimpleNodeFactoryUnitTest extends WebSocketAddonTestUtils {
                 channels(
                         getWebSocketChannelDTO(1, "hostname_1"),
                         getWebSocketChannelDTO(2, "hostname_2"));
-        WebSocketNodeInterface host1 = nodeFactory.getHostTreeNode(channels.get(0));
-        WebSocketNodeInterface host2 = nodeFactory.getHostTreeNode(channels.get(1));
+        WebSocketNodeInterface host1 = nodeFactory.getHostTreeNode(channels.get(0)).getNode();
+        WebSocketNodeInterface host2 = nodeFactory.getHostTreeNode(channels.get(1)).getNode();
         ArrayList<WebSocketMessageDTO> messages = new ArrayList<>();
 
         Comparator<WebSocketMessageDTO> comparator =
@@ -112,7 +112,7 @@ public class SimpleNodeFactoryUnitTest extends WebSocketAddonTestUtils {
         // When
         for (int i = 0; i < 5; i++) {
             messages.add(getTextOutgoingMessage(channels.get(i % 2), "TestMessage_" + i, i));
-            nodeFactory.getMessageTreeNode(messages.get(i)).getMessage();
+            nodeFactory.getMessageTreeNode(messages.get(i)).getNode().getMessage();
         }
         List<WebSocketMessageDTO> host1Messages =
                 nodeFactory.getRoot().getMessagesPerHost(new HashMap<>()).get(host1);
@@ -138,7 +138,7 @@ public class SimpleNodeFactoryUnitTest extends WebSocketAddonTestUtils {
                 channels(
                         getWebSocketChannelDTO(1, "hostname_A"),
                         getWebSocketChannelDTO(2, "hostname_A"));
-        WebSocketNodeInterface hostNode = nodeFactory.getHostTreeNode(channels.get(0));
+        WebSocketNodeInterface hostNode = nodeFactory.getHostTreeNode(channels.get(0)).getNode();
 
         // When
         nodeFactory.getMessageTreeNode(getTextOutgoingMessage(channels.get(0), "Message_1", 1));

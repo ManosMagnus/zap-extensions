@@ -25,6 +25,7 @@ import org.zaproxy.zap.extension.websocket.WebSocketChannelDTO;
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.NodesUtilities;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.WebSocketNode;
+import org.zaproxy.zap.extension.websocket.treemap.nodes.WebSocketNodeWrapper;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.contents.*;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.namers.WebSocketNodeNamer;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeInterface;
@@ -73,7 +74,7 @@ public class SimpleNodeFactory implements NodeFactory {
     }
 
     @Override
-    public WebSocketNodeInterface getMessageTreeNode(WebSocketMessageDTO message) {
+    public WebSocketNodeWrapper getMessageTreeNode(WebSocketMessageDTO message) {
 
         WebSocketNodeInterface hostNode = null;
         try {
@@ -85,12 +86,25 @@ public class SimpleNodeFactory implements NodeFactory {
         }
         if (hostNode == null) return null;
 
+        WebSocketNodeWrapper result;
+
         MessageContent content = getMessageContentPrototype(message);
 
         int pos = hostNode.getPosition(content);
-        return (pos < 0)
-                ? this.createMessageNode(hostNode, Math.abs(pos) - 1, new MessageContent(content))
-                : hostNode.getChildAt(pos).updateContent(content);
+
+        if (pos < 0) {
+            result =
+                    new WebSocketNodeWrapper(
+                            this.createMessageNode(
+                                    hostNode, Math.abs(pos) - 1, new MessageContent(content)),
+                            WebSocketNodeWrapper.State.INSERTED);
+        } else {
+            return new WebSocketNodeWrapper(
+                    hostNode.getChildAt(pos).updateContent(content),
+                    WebSocketNodeWrapper.State.CHANGED);
+        }
+
+        return result;
     }
 
     @Override
@@ -100,15 +114,26 @@ public class SimpleNodeFactory implements NodeFactory {
     }
 
     @Override
-    public WebSocketNodeInterface getHostTreeNode(WebSocketChannelDTO channel)
+    public WebSocketNodeWrapper getHostTreeNode(WebSocketChannelDTO channel)
             throws DatabaseException, HttpMalformedHeaderException {
 
         HostFolderContent content = getHostContentPrototype(channel);
 
+        WebSocketNodeWrapper result;
         int pos = root.getPosition(content);
-        return (pos < 0)
-                ? this.createHostNode(root, Math.abs(pos) - 1, new HostFolderContent(content))
-                : root.getChildAt(pos);
+
+        if (pos < 0) {
+            result =
+                    new WebSocketNodeWrapper(
+                            this.createHostNode(
+                                    root, Math.abs(pos) - 1, new HostFolderContent(content)),
+                            WebSocketNodeWrapper.State.INSERTED);
+        } else {
+            result =
+                    new WebSocketNodeWrapper(
+                            root.getChildAt(pos), WebSocketNodeWrapper.State.UNCHANGED);
+        }
+        return result;
     }
 
     @Override

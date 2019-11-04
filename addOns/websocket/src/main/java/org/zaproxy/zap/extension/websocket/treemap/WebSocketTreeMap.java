@@ -24,6 +24,7 @@ import org.zaproxy.zap.extension.websocket.WebSocketMessage;
 import org.zaproxy.zap.extension.websocket.WebSocketObserver;
 import org.zaproxy.zap.extension.websocket.WebSocketProxy;
 import org.zaproxy.zap.extension.websocket.db.WebSocketStorage;
+import org.zaproxy.zap.extension.websocket.treemap.nodes.WebSocketNodeWrapper;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.factories.NodeFactory;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeInterface;
 
@@ -48,15 +49,17 @@ public class WebSocketTreeMap implements TreeMap, WebSocketObserver {
         return this;
     }
 
-    /** Adding a WebSocket Message in the Tree Map. */
-    public synchronized WebSocketNodeInterface addMessage(WebSocketMessage webSocketMessage) {
+    /**
+     * Adding a WebSocket Message in the Tree Map.
+     *
+     * @return the new Message node or the changed one.
+     */
+    public synchronized WebSocketNodeWrapper addMessage(WebSocketMessage webSocketMessage) {
 
-        WebSocketNodeInterface result = null;
+        WebSocketNodeWrapper result = null;
 
         if (!shouldIgnoreMode(webSocketMessage.getProxyMode())) {
-
             result = nodeFactory.getMessageTreeNode(webSocketMessage.getDTO());
-
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug(nodeFactory.getRoot());
             }
@@ -71,9 +74,9 @@ public class WebSocketTreeMap implements TreeMap, WebSocketObserver {
      * @param proxy the Connecting proxy.
      * @return the new Host Node or the existing one.
      */
-    public synchronized WebSocketNodeInterface addConnection(WebSocketProxy proxy) {
+    public synchronized WebSocketNodeWrapper addConnection(WebSocketProxy proxy) {
 
-        WebSocketNodeInterface result = null;
+        WebSocketNodeWrapper result = null;
 
         if (!shouldIgnoreMode(proxy.getMode())) {
 

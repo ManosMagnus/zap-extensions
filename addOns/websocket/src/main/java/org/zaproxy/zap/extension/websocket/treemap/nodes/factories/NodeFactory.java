@@ -23,6 +23,7 @@ import org.parosproxy.paros.db.DatabaseException;
 import org.parosproxy.paros.network.HttpMalformedHeaderException;
 import org.zaproxy.zap.extension.websocket.WebSocketChannelDTO;
 import org.zaproxy.zap.extension.websocket.WebSocketMessageDTO;
+import org.zaproxy.zap.extension.websocket.treemap.nodes.WebSocketNodeWrapper;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.contents.NodeContent;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeAbstract;
 import org.zaproxy.zap.extension.websocket.treemap.nodes.structural.WebSocketNodeInterface;
@@ -36,7 +37,7 @@ public interface NodeFactory {
      * @return the {@link WebSocketNodeAbstract <WebSocketContent>} with the appropriate message
      *     content.
      */
-    WebSocketNodeInterface getMessageTreeNode(WebSocketMessageDTO message);
+    WebSocketNodeWrapper getMessageTreeNode(WebSocketMessageDTO message);
 
     WebSocketNodeInterface createMessageNode(
             WebSocketNodeInterface parent, int position, NodeContent nodeContent);
@@ -54,7 +55,7 @@ public interface NodeFactory {
      * @throws HttpMalformedHeaderException if the Handshake {@link
      *     org.parosproxy.paros.network.HttpMessage} is Malformed
      */
-    WebSocketNodeInterface getHostTreeNode(WebSocketChannelDTO channel)
+    WebSocketNodeWrapper getHostTreeNode(WebSocketChannelDTO channel)
             throws DatabaseException, HttpMalformedHeaderException;
 
     WebSocketNodeInterface createHostNode(
